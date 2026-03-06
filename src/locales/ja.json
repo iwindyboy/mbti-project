@@ -1,0 +1,98 @@
+{
+  "common": {
+    "appName": "SCAN",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "confirm": "確認",
+    "cancel": "キャンセル"
+  },
+  "menu": {
+    "main": "メイン",
+    "intro": "SCAN紹介",
+    "survey": "SCAN性格検査（基本）",
+    "dating": "ドキドキ恋愛検査（恋愛）",
+    "career": "神ライフキャリア検査（職場）",
+    "persona": "私のペルソナ検査（関係）",
+    "share": "検査結果を共有する",
+    "history": "検査記録を見る",
+    "language": "言語",
+    "myResults": "過去の私の結果を見る"
+  },
+  "landing": {
+    "topLabel": "性格 · 恋愛 · 関係",
+    "mainHeadline": "通り過ぎたあなたの傾向、\nSCANが分析してくれます。",
+    "startButton": "SCAN性格検査を始める",
+    "introButton": "SCAN紹介文",
+    "otherTestButton": "その他の性格検査"
+  },
+  "intro": {
+    "mainTitle": "SCAN : 32bits Personalities",
+    "subtitle": "より細かく、より自分らしく自分を読む\n高解像度傾向分析",
+    "question1": "\"私はどんな人だろう？\"",
+    "answer1": "SCANはこの質問に急がず、\nしかし正確に答えようとする検査です。",
+    "question2": "\"私は敏感なのだろうか？\"\n\"なぜ私はこんな状況で特に辛いのだろう？\"",
+    "answer2": "自分を責めることから始めなくても大丈夫です。\n問題はあなたではなく、\nあなたの傾向が使われている方法かもしれません。",
+    "section1Title": "SCANは何が違うのか？",
+    "section2Title": "あなたの座標を作る5つの傾向軸",
+    "section3Title": "SCANをすると何が変わるのか？",
+    "warningTitle": "始める前に、一つだけ約束してください",
+    "warningText": "直感的な答えが最も正確なデータです。\n深く考えすぎないでください。\n最初の感覚が向く方を選んでください。\n一問に10秒以上悩まない\nあなたの正直さが最も正確な結果を作ります。",
+    "footerTitle": "32bits Personalities",
+    "footerText": "さあ、もう少し鮮明に自分を理解してみませんか？",
+    "startButton": "SCAN性格検査を始める"
+  },
+  "survey": {
+    "title": "SCAN性格検査",
+    "step": "ステップ",
+    "instruction": "直感的な答えが最も正確なデータかもしれません。\n深く考えすぎず、最初の感覚でチェックしてください！",
+    "previousButton": "前へ",
+    "nextButton": "次のステップ",
+    "resultButton": "結果を見る",
+    "hint": "このグループのすべての質問に答えてください",
+    "answered": "回答済み"
+  },
+  "result": {
+    "title": "傾向分析結果",
+    "basicReport": "ベーシックレポート",
+    "premiumReport": "プレミアムレポートでより深く知る",
+    "resetButton": "再検査する",
+    "shareButton": "結果を共有する"
+  },
+  "pages": {
+    "dating": {
+      "title": "ドキドキ恋愛検査",
+      "description": "恋愛関連コンテンツはまもなく追加されます。"
+    },
+    "career": {
+      "title": "神ライフキャリア検査",
+      "description": "キャリア関連コンテンツはまもなく追加されます。"
+    },
+    "persona": {
+      "title": "私のペルソナ検査",
+      "description": "関係関連コンテンツはまもなく追加されます。"
+    },
+    "share": {
+      "title": "検査結果を共有する",
+      "description": "検査結果共有機能はまもなく追加されます。"
+    },
+    "history": {
+      "title": "検査記録を見る",
+      "description": "検査記録機能はまもなく追加されます。"
+    },
+    "language": {
+      "title": "言語設定",
+      "description": "言語設定機能はまもなく追加されます。"
+    },
+    "myResults": {
+      "title": "過去の私の結果を見る",
+      "noResults": "保存された結果がありません。",
+      "date": "検査日",
+      "typeCode": "タイプ",
+      "viewDetail": "詳細を見る"
+    }
+  }
+}

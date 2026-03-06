@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔮 나의 사주팔자</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #FFF8F3;
+      --color-primary: #1A0A2E;
+      --color-accent: #8B3A8B;
+      --color-gold: #C8956C;
+      --color-card: #FFFFFF;
+      --color-text: #2D1B40;
+      --color-text-sub: #7B6B8A;
+      --color-border: #EDE0F5;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* 스크롤 진행률 바 */
+    #progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #8B3A8B, #C8956C);
+      width: 0%;
+      z-index: 9999;
+      transition: width 0.1s ease;
+    }
+
+    /* 입력 화면 */
+    #screen-input {
+      display: block;
+    }
+
+    #screen-loading,
+    #screen-result,
+    #screen-scan-input {
+      display: none;
+    }
+
+    /* 헤더 */
+    .header {
+      background: linear-gradient(180deg, #1A0A2E 0%, #4A1468 50%, #8B3A8B 100%);
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* 별똥별 애니메이션 */
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    .header h1 {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    /* 폼 카드 */
+    .form-card {
+      background: var(--color-card);
+      border-radius: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      margin: -20px 20px 20px;
+      padding: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--color-text);
+      font-size: 14px;
+    }
+
+    .form-group input[type="text"],
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .date-selects {
+      display: flex;
+      gap: 8px;
+    }
+
+    .date-selects select {
+      flex: 1;
+    }
+
+    .date-selects select:first-child {
+      flex: 1.67;
+    }
+
+    /* 라디오 카드 */
+    .radio-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .radio-card {
+      flex: 1;
+      padding: 16px;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .radio-card input {
+      display: none;
+    }
+
+    .radio-card input:checked + .radio-label {
+      background: var(--color-accent);
+      color: white;
+    }
+
+    .radio-label {
+      display: block;
+      padding: 8px;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    /* 제출 버튼 */
+    #btn-submit {
+      width: 100%;
+      height: 56px;
+      background: linear-gradient(135deg, #1A0A2E, #8B3A8B);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    #btn-submit:hover {
+      transform: translateY(-2px);
+    }
+
+    /* 로딩 화면 */
+    #screen-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #1A0A2E 0%, #4A1468 50%, #8B3A8B 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 10000;
+    }
+
+    .loading-emoji {
+      font-size: 72px;
+      animation: float 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .loading-dots span {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .loading-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    /* SCAN 입력 화면 */
+    #screen-scan-input {
+      display: none;
+    }
+
+    .scan-input-header {
+      background: linear-gradient(180deg, #1A0A2E 0%, #4A1468 50%, #8B3A8B 100%);
+      padding: 20px;
+      color: white;
+      position: relative;
+    }
+
+    .scan-input-back-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px 0;
+      margin-bottom: 12px;
+    }
+
+    .scan-input-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .scan-input-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .scan-input-card {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      margin: -20px 20px 20px;
+      padding: 28px;
+    }
+
+    .scan-input-guide {
+      font-size: 14px;
+      color: var(--color-text-sub);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .scan-input-example {
+      font-size: 13px;
+      color: var(--color-text-sub);
+      margin-top: 4px;
+    }
+
+    #input-scan-type {
+      width: 100%;
+      padding: 20px;
+      border: 2px solid #D4B8E0;
+      border-radius: 16px;
+      font-size: 28px;
+      letter-spacing: 6px;
+      text-align: center;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      margin-bottom: 12px;
+      transition: border-color 0.3s;
+    }
+
+    #input-scan-type:focus {
+      outline: none;
+      border-color: #8B3A8B;
+    }
+
+    #input-scan-type.valid {
+      border-color: #2E8B57;
+    }
+
+    #input-scan-type.invalid {
+      border-color: #E53E3E;
+    }
+
+    #scan-type-feedback {
+      text-align: center;
+      font-size: 14px;
+      min-height: 20px;
+      margin-bottom: 20px;
+    }
+
+    #scan-type-feedback.valid {
+      color: #2E8B57;
+    }
+
+    #scan-type-feedback.invalid {
+      color: #E53E3E;
+    }
+
+    #btn-start-integrated {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: #CCC;
+      color: white;
+    }
+
+    #btn-start-integrated:enabled {
+      background: linear-gradient(135deg, #8B3A8B 0%, #1A0A2E 100%);
+      color: white;
+    }
+
+    #btn-start-integrated:enabled:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(139, 58, 139, 0.4);
+    }
+
+    #btn-start-integrated:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .relation-match-card {
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .relation-match-card.best {
+      background: #F0FFF4;
+      color: #2E8B57;
+    }
+
+    .relation-match-card.worst {
+      background: #FFF0F0;
+      color: #E53E3E;
+    }
+
+    /* 결과 화면 */
+    #screen-result {
+      display: none;
+    }
+
+    .result-header {
+      background: linear-gradient(180deg, #1A0A2E 0%, #4A1468 50%, #8B3A8B 100%);
+      padding: 48px 20px 36px;
+      color: white;
+      text-align: center;
+    }
+
+    .result-header .subtitle {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+
+    .ilgan-badge {
+      display: inline-block;
+      padding: 16px 32px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50px;
+      font-size: 20px;
+      margin-bottom: 24px;
+    }
+
+    .saju-cards {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .saju-card {
+      flex: 1;
+      padding: 12px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .saju-card.highlight {
+      background: white;
+      color: var(--color-accent);
+    }
+
+    .saju-card .label {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    .saju-card .characters {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .saju-card .pronunciation {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    .birthdate {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    /* 전체개관 섹션 */
+    .result-section {
+      background: white;
+      padding: 32px 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-number {
+      width: 40px;
+      height: 40px;
+      background: var(--color-accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--color-text-sub);
+      margin-top: 4px;
+    }
+
+    .section-content {
+      line-height: 1.9;
+      color: var(--color-text);
+      margin-bottom: 24px;
+    }
+
+    .section-content p {
+      margin-bottom: 16px;
+    }
+
+    .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .keyword-tag {
+      padding: 8px 16px;
+      background: #F0E6FF;
+      color: #6B2FA0;
+      border-radius: 50px;
+      font-size: 14px;
+    }
+
+    .strength-caution {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .strength-card,
+    .caution-card {
+      padding: 16px;
+      border-radius: 16px;
+    }
+
+    .strength-card {
+      background: #F0FFF4;
+      color: #276749;
+    }
+
+    .caution-card {
+      background: #FFF8F0;
+      color: #9C4221;
+    }
+
+    .scan-banner {
+      background: #F5F0FF;
+      border-left: 4px solid #8B3A8B;
+      padding: 16px;
+      border-radius: 0 12px 12px 0;
+      margin-top: 24px;
+    }
+
+    /* 전체개관 섹션 (추가 1) - CSS */
+    .overview-section-new {
+      background: white;
+      padding: 24px;
+      margin: 0 20px 20px;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .overview-title-new {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 12px;
+    }
+
+    .overview-subtitle-new {
+      font-size: 14px;
+      color: #8B3A8B;
+      margin-bottom: 20px;
+    }
+
+    .overview-content-new {
+      line-height: 1.9;
+      color: var(--color-text);
+      margin-bottom: 20px;
+    }
+
+    .overview-content-new p {
+      margin-bottom: 16px;
+    }
+
+    .overview-keywords-new {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .overview-keywords-new .keyword-tag-new {
+      padding: 8px 16px;
+      background: #F0E6FF;
+      color: #6B2FA0;
+      border-radius: 50px;
+      font-size: 14px;
+    }
+
+    .overview-life-theme-new {
+      padding: 12px 16px;
+      background: #F5F0FF;
+      border-left: 4px solid #8B3A8B;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 15px;
+      color: var(--color-text);
+    }
+
+    .overview-strength-caution-new {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .overview-strength-card-new {
+      padding: 16px;
+      background: #F0FFF4;
+      border-left: 4px solid #2E8B57;
+      border-radius: 8px;
+    }
+
+    .overview-strength-card-new strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #276749;
+    }
+
+    .overview-strength-card-new div {
+      font-size: 14px;
+      color: #276749;
+      line-height: 1.6;
+    }
+
+    .overview-caution-card-new {
+      padding: 16px;
+      background: #FFF8F0;
+      border-left: 4px solid #CD853F;
+      border-radius: 8px;
+    }
+
+    .overview-caution-card-new strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #9C4221;
+    }
+
+    .overview-caution-card-new div {
+      font-size: 14px;
+      color: #9C4221;
+      line-height: 1.6;
+    }
+
+    /* 총운정리 섹션 (추가 2) - CSS */
+    .summary-section {
+      background: #1A0A2E;
+      color: white;
+      padding: 32px 20px;
+      margin: 0 0 20px;
+    }
+
+    .summary-title {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .summary-content {
+      line-height: 1.9;
+      margin-bottom: 24px;
+      font-size: 15px;
+    }
+
+    .summary-content p {
+      margin-bottom: 16px;
+    }
+
+    .summary-final-message {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .summary-lucky-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .lucky-item {
+      flex: 1;
+      min-width: 100px;
+      background: rgba(255,255,255,0.1);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .lucky-label {
+      display: block;
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .lucky-value {
+      display: block;
+      font-size: 18px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <!-- 스크롤 진행률 바 -->
+  <div id="progress-bar"></div>
+
+  <!-- 입력 화면 -->
+  <div id="screen-input">
+    <div class="header">
+      <div class="star" style="top: 20%; left: 10%; animation-delay: 0s;"></div>
+      <div class="star" style="top: 40%; left: 80%; animation-delay: 1s;"></div>
+      <div class="star" style="top: 60%; left: 30%; animation-delay: 2s;"></div>
+      <h1>🔮 나의 사주팔자</h1>
+      <p>생년월일로 알아보는 나의 이야기</p>
+    </div>
+
+    <div class="form-card">
+      <form id="saju-form">
+        <div class="form-group">
+          <label>이름</label>
+          <input type="text" id="input-name" placeholder="이름을 입력해주세요" required>
+        </div>
+
+        <div class="form-group">
+          <label>생년월일</label>
+          <div class="date-selects">
+            <select id="input-year">
+              <option value="">연도</option>
+            </select>
+            <select id="input-month">
+              <option value="">월</option>
+            </select>
+            <select id="input-day">
+              <option value="">일</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>태어난 시간 (모르시면 '모름' 선택)</label>
+          <select id="input-hour">
+            <option value="">모름 (시주 제외)</option>
+            <option value="0">자시 ㅣ 밤 11시 ~ 새벽 1시</option>
+            <option value="2">축시 ㅣ 새벽 1시 ~ 3시</option>
+            <option value="4">인시 ㅣ 새벽 3시 ~ 5시</option>
+            <option value="6">묘시 ㅣ 새벽 5시 ~ 7시</option>
+            <option value="8">진시 ㅣ 오전 7시 ~ 9시</option>
+            <option value="10">사시 ㅣ 오전 9시 ~ 11시</option>
+            <option value="12">오시 ㅣ 오전 11시 ~ 오후 1시</option>
+            <option value="14">미시 ㅣ 오후 1시 ~ 3시</option>
+            <option value="16">신시 ㅣ 오후 3시 ~ 5시</option>
+            <option value="18">유시 ㅣ 오후 5시 ~ 7시</option>
+            <option value="20">술시 ㅣ 오후 7시 ~ 9시</option>
+            <option value="22">해시 ㅣ 오후 9시 ~ 11시</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>달력 종류</label>
+          <div class="radio-group">
+            <div class="radio-card">
+              <input type="radio" name="calendar" id="radio-solar" value="solar" checked>
+              <label for="radio-solar" class="radio-label">양력</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="calendar" id="radio-lunar" value="lunar">
+              <label for="radio-lunar" class="radio-label">음력</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>성별</label>
+          <div class="radio-group">
+            <div class="radio-card">
+              <input type="radio" name="gender" id="radio-female" value="female" checked>
+              <label for="radio-female" class="radio-label">👩 여성</label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="gender" id="radio-male" value="male">
+              <label for="radio-male" class="radio-label">👨 남성</label>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-submit">🔮 나의 사주 보기</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 로딩 화면 -->
+  <div id="screen-loading">
+    <div class="loading-emoji">🔮</div>
+    <p id="loading-text" style="margin-top: 20px; font-size: 16px;">님의 타고난 기질을 살펴보고 있어요...</p>
+    <div class="loading-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div id="screen-result">
+    <section class="result-header" id="result-header">
+      <div class="subtitle" id="result-subtitle"></div>
+      <div class="ilgan-badge" id="badge-ilgan"></div>
+      <div class="saju-cards">
+        <div class="saju-card" id="card-year">
+          <div class="label">연주</div>
+          <div class="characters" id="year-characters"></div>
+          <div class="pronunciation" id="year-pronunciation"></div>
+        </div>
+        <div class="saju-card" id="card-month">
+          <div class="label">월주</div>
+          <div class="characters" id="month-characters"></div>
+          <div class="pronunciation" id="month-pronunciation"></div>
+        </div>
+        <div class="saju-card highlight" id="card-day">
+          <div class="label">일주</div>
+          <div class="characters" id="day-characters"></div>
+          <div class="pronunciation" id="day-pronunciation"></div>
+        </div>
+        <div class="saju-card" id="card-hour">
+          <div class="label">시주</div>
+          <div class="characters" id="hour-characters"></div>
+          <div class="pronunciation" id="hour-pronunciation"></div>
+        </div>
+      </div>
+      <div class="birthdate" id="display-birthdate"></div>
+    </section>
+
+    <!-- 전체개관 섹션 (추가 1) -->
+    <section class="overview-section-new" id="section-overview-new">
+      <div class="overview-title-new">🔍 나는 어떤 사람인가?</div>
+      <div class="overview-subtitle-new" id="overview-subtitle-new"></div>
+      <div class="overview-content-new" id="overview-content-new"></div>
+      <div class="overview-keywords-new" id="overview-keywords-new"></div>
+      <div class="overview-life-theme-new" id="overview-life-theme-new"></div>
+      <div class="overview-strength-caution-new">
+        <div class="overview-strength-card-new">
+          <strong>💪 강점</strong>
+          <div id="overview-strength-new"></div>
+        </div>
+        <div class="overview-caution-card-new">
+          <strong>⚠️ 주의점</strong>
+          <div id="overview-caution-new"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-section" id="section-overview">
+      <div class="section-header">
+        <div class="section-number">01</div>
+        <div>
+          <div class="section-title">나는 어떤 사람인가?</div>
+          <div class="section-subtitle" id="overview-subtitle"></div>
+        </div>
+      </div>
+      <div class="section-content" id="overview-content"></div>
+      <div class="keywords" id="overview-keywords"></div>
+      <div class="strength-caution">
+        <div class="strength-card">
+          <strong>💪 강점</strong>
+          <div id="overview-strength"></div>
+        </div>
+        <div class="caution-card">
+          <strong>⚠️ 주의점</strong>
+          <div id="overview-caution"></div>
+        </div>
+      </div>
+      <div class="scan-banner" id="banner-scan-mid">
+        <p><strong>✨ 지금의 내 모습도 알고 싶다면?</strong></p>
+        <p style="font-size: 14px; margin-top: 8px;">32 스펙트럼 검사로 선천적 기질과 현재 성향을 비교해보세요</p>
+        <button style="margin-top: 12px; padding: 8px 16px; background: #8B3A8B; color: white; border: none; border-radius: 8px; font-size: 14px;">SCAN 검사 하러가기 →</button>
+      </div>
+    </section>
+
+    <!-- 총운정리 섹션 (추가 2) -->
+    <section class="summary-section" id="section-summary">
+      <div class="summary-title">총운정리</div>
+      <div class="summary-content" id="summary-content"></div>
+      <div class="summary-final-message" id="summary-final-message"></div>
+      <div class="summary-lucky-info">
+        <div class="lucky-item">
+          <span class="lucky-label">행운 색상</span>
+          <span class="lucky-value" id="summary-lucky-color"></span>
+        </div>
+        <div class="lucky-item">
+          <span class="lucky-label">행운 숫자</span>
+          <span class="lucky-value" id="summary-lucky-number"></span>
+        </div>
+        <div class="lucky-item">
+          <span class="lucky-label">좋은 방향</span>
+          <span class="lucky-value" id="summary-good-direction"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 통합 분석 버튼 -->
+    <div style="padding: 20px; text-align: center; background: white;">
+      <button id="btn-go-scan" style="
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #8B3A8B 0%, #1A0A2E 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+      ">✨ 통합 성향 분석 시작하기 →</button>
+    </div>
+  </div>
+
+  <!-- SCAN 유형 입력 화면 -->
+  <div id="screen-scan-input">
+    <div class="scan-input-header">
+      <button class="scan-input-back-btn" id="btn-scan-back">← 뒤로가기</button>
+      <div class="scan-input-title">✨ 통합 성향 분석</div>
+      <div class="scan-input-subtitle">
+        32 스펙트럼 결과를 입력하면<br />
+        지금의 나와 원래의 나를 함께 볼 수 있어요
+      </div>
+    </div>
+
+    <div class="scan-input-card">
+      <div class="scan-input-guide">
+        32 스펙트럼 검사 결과 유형 코드를 입력해주세요
+        <div class="scan-input-example">예: INTJD, ENFJA, ISFPD</div>
+      </div>
+
+      <input 
+        type="text" 
+        id="input-scan-type" 
+        placeholder="예: INTJD"
+        maxlength="5"
+      />
+
+      <div id="scan-type-feedback"></div>
+
+      <button id="btn-start-integrated" disabled>
+        통합 분석 시작하기 →
+      </button>
+    </div>
+  </div>
+
+  <!-- 통합 성향 리포트 화면 -->
+  <div id="screen-integrated">
+    <!-- 헤더 -->
+    <div class="integrated-header">
+      <button class="integrated-back-btn" id="btn-integrated-back">← 뒤로가기</button>
+      <div class="integrated-title">✨ 통합 성향 리포트</div>
+      <div class="integrated-subtitle" id="integrated-subtitle"></div>
+      <div class="integrated-comparison-cards">
+        <div class="comparison-card">
+          <div class="comparison-label">🌱 선천 성향</div>
+          <div class="comparison-type" id="comparison-saju-type"></div>
+          <div class="comparison-desc" id="comparison-saju-desc"></div>
+        </div>
+        <div class="comparison-card" style="font-size: 20px; padding: 16px 8px;">VS</div>
+        <div class="comparison-card">
+          <div class="comparison-label">🔄 후천 성향</div>
+          <div class="comparison-type" id="comparison-scan-type"></div>
+          <div class="comparison-desc" id="comparison-scan-desc"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 섹션 1: 나의 두 얼굴 -->
+    <section class="integrated-section" id="section-two-faces">
+      <div class="integrated-section-header">
+        <div class="integrated-section-number">01</div>
+        <div class="integrated-section-title">나의 두 얼굴</div>
+      </div>
+      <div class="two-faces-card original">
+        <div class="two-faces-label">🌱 원래의 나 · 선천적 성향</div>
+        <div class="two-faces-type" id="two-faces-original-type"></div>
+        <div class="two-faces-content" id="two-faces-original-content"></div>
+        <div class="two-faces-keywords" id="two-faces-original-keywords"></div>
+      </div>
+      <div class="two-faces-card current">
+        <div class="two-faces-label">🔄 지금의 나 · 후천적 성향</div>
+        <div class="two-faces-type" id="two-faces-current-type"></div>
+        <div class="two-faces-content" id="two-faces-current-content"></div>
+      </div>
+      <div class="two-faces-message">
+        두 가지 모두 진짜 당신이에요.<br />
+        함께 볼 때 비로소 내가 완전하게 보여요.
+      </div>
+    </section>
+
+    <!-- 섹션 2: 갭(Gap) 분석 -->
+    <section class="integrated-section" id="section-gap">
+      <div class="integrated-section-header">
+        <div class="integrated-section-number">02</div>
+        <div class="integrated-section-title">선천과 후천의 갭(Gap)</div>
+      </div>
+      <div id="gap-badge-container"></div>
+      <div class="gap-comparison" id="gap-comparison-container"></div>
+      <div class="gap-description" id="gap-description"></div>
+      <div class="gap-coaching-box" id="gap-coaching-box"></div>
+    </section>
+
+    <!-- 섹션 3: 통합 강점 -->
+    <section class="integrated-section" id="section-strength">
+      <div class="integrated-section-header">
+        <div class="integrated-section-number">03</div>
+        <div class="integrated-section-title">나만의 최강 조합</div>
+      </div>
+      <div class="strength-card saju">
+        <div class="strength-label">🌱 타고난 강점</div>
+        <div class="strength-content" id="strength-saju"></div>
+      </div>
+      <div class="strength-card scan">
+        <div class="strength-label">🔄 현재의 강점</div>
+        <div class="strength-content" id="strength-scan"></div>
+      </div>
+      <div class="combined-strength-box">
+        <div class="combined-strength-label">⚡ 두 강점이 만날 때</div>
+        <div class="combined-strength-content" id="combined-strength-msg"></div>
+      </div>
+    </section>
+
+    <!-- 섹션 4: 관계 코칭 -->
+    <section class="integrated-section" id="section-relation" style="background: #FFF5F8;">
+      <div class="integrated-section-header">
+        <div class="integrated-section-number">04</div>
+        <div class="integrated-section-title">관계 코칭</div>
+      </div>
+      <div class="strength-card" style="background: white; margin-bottom: 16px;">
+        <div class="strength-label">🌱 타고난 관계 패턴</div>
+        <div class="strength-content" id="relation-saju"></div>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <div class="strength-label">🔄 지금 나와 잘 맞는 유형</div>
+        <div id="relation-scan-best"></div>
+        <div id="relation-scan-worst" style="margin-top: 12px;"></div>
+      </div>
+      <div class="gap-coaching-box" id="relation-coaching-box" style="background: #FFF5F8; border-left-color: #C06090;">
+        <div class="gap-coaching-label">💝 나의 관계 코칭</div>
+        <div class="gap-coaching-content" id="relation-coaching-msg"></div>
+      </div>
+    </section>
+
+    <!-- 섹션 5: 커리어 코칭 -->
+    <section class="integrated-section" id="section-career" style="background: #F0F5FF;">
+      <div class="integrated-section-header">
+        <div class="integrated-section-number">05</div>
+        <div class="integrated-section-title">커리어 코칭</div>
+      </div>
+      <div class="strength-card" style="background: white; margin-bottom: 16px;">
+        <div class="strength-label">🌱 타고난 커리어 방향</div>
+        <div class="strength-content" id="career-saju"></div>
+      </div>
+      <div style="background: #E8F0FF; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <div class="strength-label">🔄 현재 성향에 맞는 직업</div>
+        <div class="strength-content" id="career-scan"></div>
+      </div>
+      <div class="gap-coaching-box" id="career-coaching-box" style="background: #F0F5FF; border-left-color: #4A6FA5;">
+        <div class="gap-coaching-label">🧭 나의 커리어 코칭</div>
+        <div class="gap-coaching-content" id="career-coaching-msg"></div>
+      </div>
+    </section>
+
+    <!-- 섹션 6: 성장 방향 코칭 -->
+    <section class="integrated-section" id="section-growth">
+      <div class="integrated-section-header">
+        <div class="integrated-section-number">06</div>
+        <div class="integrated-section-title">지금 나에게 필요한 것</div>
+      </div>
+      <div class="gap-coaching-box" style="background: #FFF8F0; border-left-color: #CD853F; margin-bottom: 16px;">
+        <div class="gap-coaching-label">🌱 타고난 주의점</div>
+        <div class="gap-coaching-content" id="growth-saju-caution"></div>
+      </div>
+      <div class="gap-coaching-box" style="background: #FFF0F5; border-left-color: #C06090; margin-bottom: 16px;">
+        <div class="gap-coaching-label">🔄 현재의 약점</div>
+        <div class="gap-coaching-content" id="growth-scan-weakness"></div>
+      </div>
+      <div class="combined-strength-box" style="margin-bottom: 16px;">
+        <div class="combined-strength-label">💌 당신에게 전하는 조언</div>
+        <div class="combined-strength-content" id="growth-scan-advice" style="font-size: 18px; font-weight: 700;"></div>
+      </div>
+      <div style="background: #F5F0FF; border-radius: 16px; padding: 20px; text-align: center;">
+        <div style="color: #6B2FA0; font-weight: 700; font-size: 16px;" id="growth-msg"></div>
+      </div>
+    </section>
+
+    <!-- 마무리 섹션 -->
+    <section style="background: linear-gradient(180deg, #1A0A2E 0%, #4A1468 50%, #8B3A8B 100%); color: white; padding: 40px 24px;">
+      <div style="font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 24px;">🌟 통합 분석을 마치며</div>
+      <div style="font-size: 16px; line-height: 2; text-align: center; margin-bottom: 32px;" id="closing-message"></div>
+      <div style="display: flex; gap: 12px; flex-direction: column;">
+        <button id="btn-back-to-result" style="
+          width: 100%;
+          padding: 16px;
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+          border: none;
+          border-radius: 14px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+        ">← 사주 결과 다시 보기</button>
+        <button id="btn-share-result" style="
+          width: 100%;
+          padding: 16px;
+          background: white;
+          color: #1A0A2E;
+          border: none;
+          border-radius: 14px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+        ">결과 공유하기 📋</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 스크립트 로드 -->
+  <script src="saju-calendar.js"></script>
+  <script src="saju/saju-db.js"></script>
+  <script src="saju-engine.js"></script>
+
+  <!-- 앱 코드 -->
+  <script>
+    // ========== Phase 2-A: 통합 성향 리포트 상수 ==========
+    
+    // 일간 → 그룹 매핑
+    const ILGAN_GROUP_MAP = {
+      '甲':'NT', '乙':'NF', '丙':'NF', '丁':'NF',
+      '戊':'ST', '己':'SF', '庚':'NT', '辛':'SF',
+      '壬':'NT', '癸':'NF'
+    };
+
+    // 갭 유형 정의 (사주그룹 × SCAN그룹 = 7가지)
+    const GAP_TYPE_MAP = {
+      'NT-NT':'match',  'NF-NF':'match',
+      'ST-ST':'match',  'SF-SF':'match',
+      'NT-NF':'head-heart',  'NF-NT':'head-heart',
+      'NT-ST':'vision-reality', 'ST-NT':'vision-reality',
+      'NT-SF':'logic-relation', 'SF-NT':'logic-relation',
+      'NF-ST':'emotion-action', 'ST-NF':'emotion-action',
+      'NF-SF':'ideal-reality',  'SF-NF':'ideal-reality',
+      'ST-SF':'result-relation','SF-ST':'result-relation'
+    };
+
+    // 갭 유형별 콘텐츠
+    const GAP_CONTENT = {
+      'match': {
+        title: '✅ 타고난 기질대로 살고 있어요',
+        subtitle: '선천과 후천이 일치해요',
+        description: '원래의 나와 지금의 나가 같은 방향을 향하고 있어요. 에너지가 자연스럽게 흐르는 삶이에요. 억지로 맞추거나 참을 필요 없이 나다운 방식으로 세상과 만나고 있는 거예요.',
+        coaching: '이미 잘 하고 있어요. 이제는 강점을 더 깊이 파는 것보다 약점을 직면하는 용기가 다음 성장을 만들어요. 불편한 영역에 조금씩 도전해보세요.',
+        color: '#2E8B57', bg: '#F0FFF4'
+      },
+      'head-heart': {
+        title: '💭 머리와 마음 사이의 갭',
+        subtitle: '논리·전략형 ↔ 감성·직관형',
+        description: '타고난 기질과 지금 살아가는 방식 사이에 거리가 있어요. 살면서 환경이 기질과 다른 방식을 요구했을 가능성이 높아요.',
+        coaching: '두 가지 모두 당신의 일부예요. 머리가 필요한 순간과 마음이 필요한 순간을 구분하는 연습이 두 가지를 모두 강점으로 만들어요.',
+        color: '#6B4C9A', bg: '#F8F0FF'
+      },
+      'vision-reality': {
+        title: '🗺️ 비전과 현실 사이의 갭',
+        subtitle: '논리·전략형 ↔ 현실·실행형',
+        description: '큰 그림을 보는 눈과 눈앞의 것을 처리하는 방식 사이에 거리가 있어요. 큰 그림을 그리는 사람이 현실의 작은 일에 치여 있을 수 있어요.',
+        coaching: '비전과 실행은 서로를 필요로 해요. 큰 그림을 그리되 오늘 할 수 있는 작은 한 가지로 연결하는 연습이 두 가지를 모두 살려요.',
+        color: '#4A6FA5', bg: '#F0F5FF'
+      },
+      'logic-relation': {
+        title: '🤝 논리와 관계 사이의 갭',
+        subtitle: '논리·전략형 ↔ 관계·배려형',
+        description: '분석적인 타고난 기질과 관계 중심적인 지금의 방식 사이에 거리가 있어요. 논리를 따르고 싶은 마음과 관계를 지키고 싶은 마음 사이에서 갈등이 반복될 수 있어요.',
+        coaching: '논리와 관계는 반드시 충돌하지 않아요. 논리적 결론을 관계를 배려하는 방식으로 전달하는 연습이 두 가지를 동시에 살리는 길이에요.',
+        color: '#C06090', bg: '#FFF5F8'
+      },
+      'emotion-action': {
+        title: '⚡ 감성과 실행 사이의 갭',
+        subtitle: '감성·직관형 ↔ 현실·실행형',
+        description: '깊은 감성과 직관의 타고난 기질과 빠르게 결과를 내는 지금의 방식 사이에 거리가 있어요. 마음을 충분히 표현하지 못한 채 결과에 쫓기는 패턴이 있을 수 있어요.',
+        coaching: '감성은 당신의 가장 강력한 연료예요. 느끼는 것을 행동의 동기로 연결하는 연습이 감성과 실행력을 동시에 발휘하게 해줘요.',
+        color: '#B8860B', bg: '#FFFDF0'
+      },
+      'ideal-reality': {
+        title: '🌙 이상과 현실 사이의 갭',
+        subtitle: '감성·직관형 ↔ 관계·배려형',
+        description: '높은 이상을 향하는 타고난 기질과 현실의 관계와 일상을 챙기는 지금의 방식 사이에 거리가 있어요. 꿈꾸는 것과 지금 해야 하는 것 사이에서 에너지가 분산될 수 있어요.',
+        coaching: '이상은 나침반이고 현실은 발판이에요. 이상을 포기하지 않으면서 지금 이 자리에서 할 수 있는 작은 것을 찾는 것이 두 가지를 모두 살리는 방법이에요.',
+        color: '#CD853F', bg: '#FFF8F0'
+      },
+      'result-relation': {
+        title: '🏆 성과와 관계 사이의 갭',
+        subtitle: '현실·실행형 ↔ 관계·배려형',
+        description: '결과와 효율을 중시하는 타고난 기질과 관계와 배려를 중심으로 살아가는 지금의 방식 사이에 거리가 있어요. 성과를 내고 싶은 마음과 관계를 지키고 싶은 마음 사이에서 지칠 수 있어요.',
+        coaching: '성과와 관계는 순서의 문제예요. 지금 어느 쪽이 더 약한지를 먼저 채워보세요.',
+        color: '#2E8B57', bg: '#F0FFF4'
+      }
+    };
+
+    // 유효한 SCAN 유형 코드 32가지
+    const VALID_SCAN_TYPES = [
+      'INTJD','INTJA','ENTJD','ENTJA','INTPD','INTPA','ENTPD','ENTPA',
+      'INFJD','INFJA','ENFJD','ENFJA','INFPD','INFPA','ENFPD','ENFPA',
+      'ISTJD','ISTJA','ESTJD','ESTJA','ISTPD','ISTPA','ESTPD','ESTPA',
+      'ISFJD','ISFJA','ESFJD','ESFJA','ISFPD','ISFPA','ESFPD','ESFPA'
+    ];
+
+    // SCAN 유형 닉네임 (입력 화면 실시간 표시용)
+    const SCAN_NICKNAME = {
+      'INTJD':'고요한 전략가','INTJA':'지능적 맥가이버',
+      'ENTJD':'거시적 사령관','ENTJA':'실행의 엔진',
+      'INTPD':'지적 모험가','INTPA':'지능적 실천가',
+      'ENTPD':'지적 팔색조','ENTPA':'변화의 촉매',
+      'INFJD':'고요한 예언자','INFJA':'성장 멘토',
+      'ENFJD':'화합의 지휘자','ENFJA':'긍정의 불꽃',
+      'INFPD':'영혼의 여행자','INFPA':'따뜻한 등불',
+      'ENFPD':'감성 스토리텔러','ENFPA':'인간 비타민',
+      'ISTJD':'신뢰의 기둥','ISTJA':'미션 해결사',
+      'ESTJD':'질서의 지휘관','ESTJA':'현장의 사령관',
+      'ISTPD':'조용한 장인','ISTPA':'즉흥의 달인',
+      'ESTPD':'영리한 협상가','ESTPA':'낙천적 에너자이저',
+      'ISFJD':'은은한 등불','ISFJA':'일상의 해결사',
+      'ESFJD':'공동체의 어머니','ESFJA':'사교의 중심',
+      'ISFPD':'조용한 예술가','ISFPA':'행동파 예술가',
+      'ESFPD':'분위기 메이커','ESFPA':'무대의 주인공'
+    };
+
+    // SCAN 핵심 데이터 (통합 분석용)
+    const SCAN_DATA = {
+      'INTJD':{ group:'NT', strength:'현상 너머를 읽는 통찰력, 완벽한 전략 설계', weakness:'완벽주의로 인한 실행 지연', advice:'80% 확신이 들면 일단 시작하세요', career:'전략 기획, IT 아키텍트, 데이터 사이언티스트', loveMatch:{ best:['INFJA','INTJD'], worst:['ESFPA','ESTPA'] }},
+      'INTJA':{ group:'NT', strength:'빠른 정보 처리, 즉각적 해결책 도출', weakness:'빠른 속도로 주변과 단절', advice:'시스템 가동 전 동료에게 1분 설명을 건네세요', career:'소프트웨어 엔지니어, 기술 컨설턴트', loveMatch:{ best:['ENFJA','ENTJA'], worst:['ISFPD','ISFJD'] }},
+      'ENTJD':{ group:'NT', strength:'거시적 조직 관리, 장기 비전 수립', weakness:'실무자 고충 간과', advice:'의사결정 후 담당자의 우려를 한 가지씩 물어보세요', career:'경영 관리자, 투자 전략가', loveMatch:{ best:['INTPD','INFJD'], worst:['ISFPD','ESFPD'] }},
+      'ENTJA':{ group:'NT', strength:'압도적 실행력, 가시적 성과 창출', weakness:'질주 중 동료의 마음을 놓침', advice:'질주 중 잠깐 멈춰 뒤를 돌아보세요', career:'영업 본부장, 스타트업 창업가', loveMatch:{ best:['ENFJA','INTJA'], worst:['ISFJD','ISTJD'] }},
+      'INTPD':{ group:'NT', strength:'핵심 원리를 꿰뚫는 통찰력', weakness:'완벽한 이론 추구로 실행 지연', advice:'매일 하나씩 작은 실험을 해보세요', career:'연구원, 전략 컨설턴트', loveMatch:{ best:['ENTJD','ENFJD'], worst:['ESFJA','ESFPA'] }},
+      'INTPA':{ group:'NT', strength:'방대한 정보에서 핵심 추출', weakness:'효율 중심으로 과정의 즐거움을 놓침', advice:'함께 가는 속도가 만드는 완성을 기억하세요', career:'기술 컨설턴트, UX 설계자', loveMatch:{ best:['ENFJA','ENTJA'], worst:['ISFPD','ISFJD'] }},
+      'ENTPD':{ group:'NT', strength:'창의적 아이디어와 날카로운 논리', weakness:'아이디어가 많아 집중 어려움', advice:'실행으로 옮겨줄 파트너와 함께하세요', career:'마케터, 벤처 투자자', loveMatch:{ best:['INTJD','INFJA'], worst:['ISTJD','ISFJD'] }},
+      'ENTPA':{ group:'NT', strength:'빠른 적응력과 창의적 문제 해결', weakness:'흥미를 잃고 다음으로 넘어가는 경향', advice:'한 가지를 깊이 파는 경험이 넓이에 깊이를 더해요', career:'스타트업 창업가, 혁신 컨설턴트', loveMatch:{ best:['INFJA','ENFJA'], worst:['ISTJD','ISFJD'] }},
+      'INFJD':{ group:'NF', strength:'사람의 감정을 읽는 깊은 공감 능력', weakness:'이상과 현실 간극에서 오는 소진', advice:'세상을 바꾸기 전 나를 먼저 채우세요', career:'심리 상담사, 사회 혁신가', loveMatch:{ best:['ENTJD','ENFJA'], worst:['ESTPA','ESFPA'] }},
+      'INFJA':{ group:'NF', strength:'비전을 현실 계획으로 만드는 능력', weakness:'너무 많이 짊어지다 소진', advice:'위임하는 것도 리더십이에요', career:'코치, 교육자', loveMatch:{ best:['ENTJA','INTJD'], worst:['ESTPD','ISTPD'] }},
+      'ENFJD':{ group:'NF', strength:'화합을 이끄는 따뜻한 카리스마', weakness:'갈등 회피로 필요한 말을 못 함', advice:'진정한 화합은 불편한 진실 나누기에서 시작해요', career:'인사 관리자, 상담사', loveMatch:{ best:['INTPD','INFJA'], worst:['ISTPD','ESTPD'] }},
+      'ENFJA':{ group:'NF', strength:'동기를 불어넣는 뜨거운 열정', weakness:'에너지를 너무 나눠 자신을 돌보지 못함', advice:'세상을 빛추는 만큼 나를 충전하는 시간도 필요해요', career:'동기 부여 강사, 스타트업 창업가', loveMatch:{ best:['INTJA','ENTJA'], worst:['ISTPD','ISTJD'] }},
+      'INFPD':{ group:'NF', strength:'깊은 공감과 독창적 시각', weakness:'이상이 너무 높아 현실과 괴리감', advice:'완벽한 작품보다 지금 이 순간의 표현이 더 소중해요', career:'작가, 예술가', loveMatch:{ best:['ENFJA','ENTJA'], worst:['ESTJD','ESTJA'] }},
+      'INFPA':{ group:'NF', strength:'따뜻한 공감력과 유연한 적응력', weakness:'타인을 먼저 챙기다 스스로 지침', advice:'나를 돌보는 것이 주변을 더 잘 돌볼 수 있는 힘이에요', career:'작가, 사회복지사', loveMatch:{ best:['ENFJA','ENTJA'], worst:['ESTJD','ENTJD'] }},
+      'ENFPD':{ group:'NF', strength:'창의적 발상과 감성적 표현', weakness:'아이디어가 많아 하나에 집중 어려움', advice:'아이디어를 실현할 파트너와 함께하면 최강이에요', career:'작가, 마케터', loveMatch:{ best:['INTJD','INFJA'], worst:['ISTJD','ESTJD'] }},
+      'ENFPA':{ group:'NF', strength:'누구와도 쉽게 친해지는 친화력', weakness:'많은 관계에 에너지 분산으로 깊이 부족', advice:'한 사람과의 깊은 대화가 당신을 더 풍요롭게 해요', career:'이벤트 기획자, 유튜버', loveMatch:{ best:['INTJA','ISTJA'], worst:['INTJD','ENTJD'] }},
+      'ISTJD':{ group:'ST', strength:'흔들리지 않는 원칙과 완벽한 실행력', weakness:'변화 저항, 새 방식 수용에 시간 필요', advice:'70%에서 시작하는 용기가 더 많은 것을 가르쳐줘요', career:'회계사, 법률가', loveMatch:{ best:['ESFJA','ISFJA'], worst:['ENTPA','ENFPA'] }},
+      'ISTJA':{ group:'ST', strength:'가장 효율적인 경로를 즉각 파악', weakness:'자신의 시스템이 완벽하다고 믿어 날카롭게 반응', advice:'시스템만큼 사람의 속도도 존중해주세요', career:'운영 관리자, 의료 종사자', loveMatch:{ best:['ESFJA','ISFPA'], worst:['ENFPD','ENTPA'] }},
+      'ESTJD':{ group:'ST', strength:'체계적 조직 관리와 명확한 방향 제시', weakness:'규칙 강조로 유연성 부족', advice:'가끔 예외를 허용하는 용기가 더 큰 신뢰를 만들어요', career:'경영자, 프로젝트 매니저', loveMatch:{ best:['ISFJA','ISTJA'], worst:['INFPA','ENFPA'] }},
+      'ESTJA':{ group:'ST', strength:'현실적 판단으로 빠른 문제 해결', weakness:'당장 결과 집중으로 장기 준비 부족', advice:'눈앞의 성과만큼 10년 후의 그림도 그려보세요', career:'영업 팀장, 현장 감독', loveMatch:{ best:['ISFJA','ESFJA'], worst:['INFPD','INTPD'] }},
+      'ISTPD':{ group:'ST', strength:'복잡한 시스템 원리 파악과 최적화', weakness:'감정 표현 서툴러 소통 단절', advice:'당신의 생각을 말로 표현하는 연습이 관계의 문을 열어요', career:'엔지니어, 외과의사', loveMatch:{ best:['ESTJA','ESFPA'], worst:['ENFJA','ENTJA'] }},
+      'ISTPA':{ group:'ST', strength:'위기 상황에서 빠른 해결책 도출', weakness:'즉흥적 판단으로 장기 목표 놓침', advice:'임기응변에 계획의 뼈대를 더하면 더 멀리 가요', career:'소방관, 응급 구조사', loveMatch:{ best:['ESFPA','ESTJA'], worst:['INFJD','INTJD'] }},
+      'ESTPD':{ group:'ST', strength:'상황 판단 빠르고 현실적 해결책 도출', weakness:'결과 중심으로 과정 배려 부족', advice:'신뢰는 결과보다 과정에서 쌓인다는 것을 기억하세요', career:'세일즈, 비즈니스 개발', loveMatch:{ best:['ISFPA','ESFPA'], worst:['INFJD','INFPD'] }},
+      'ESTPA':{ group:'ST', strength:'타고난 긍정성으로 주변에 힘을 줌', weakness:'깊이보다 즉각적 즐거움 추구', advice:'에너지를 한 곳에 집중하는 경험이 폭발력을 키워요', career:'엔터테이너, 스포츠 선수', loveMatch:{ best:['ISFPA','ESFJA'], worst:['INTJD','INFJD'] }},
+      'ISFJD':{ group:'SF', strength:'섬세한 배려와 강한 기억력으로 사람을 지킴', weakness:'자신의 필요 뒤로 미루다 소진', advice:'당신을 돌봐주는 사람에게도 마음을 열어보세요', career:'간호사, 사회복지사', loveMatch:{ best:['ESTJD','ESFJA'], worst:['ENTPA','ENFPA'] }},
+      'ISFJA':{ group:'SF', strength:'실용적 배려와 꼼꼼한 실행력', weakness:'변화 두려움으로 새 도전 주저', advice:'익숙한 것을 지키면서 새로운 것도 시도해보세요', career:'간호사, 인테리어 디자이너', loveMatch:{ best:['ESTJD','ENTJA'], worst:['ENTPD','INTPD'] }},
+      'ESFJD':{ group:'SF', strength:'따뜻한 포용력으로 공동체를 하나로', weakness:'감정 억누르고 타인 돌보다 소진', advice:'당신도 돌봄 받을 자격이 있어요', career:'사회복지사, 초등교사', loveMatch:{ best:['ISTJD','ISFJA'], worst:['ENTPA','INTPA'] }},
+      'ESFJA':{ group:'SF', strength:'사람을 편안하게 만드는 친화력', weakness:'타인 의견에 맞추다 자신의 목소리 잃음', advice:'당신의 의견도 소중해요. 먼저 말하는 연습을 해보세요', career:'이벤트 기획자, 교사', loveMatch:{ best:['ISTJD','ISTJA'], worst:['INFJD','INTJD'] }},
+      'ISFPD':{ group:'SF', strength:'섬세한 감수성으로 아름다운 것을 창조', weakness:'갈등 회피, 자기표현 서툼', advice:'감정을 표현하는 것이 더 깊은 관계의 문이에요', career:'디자이너, 사진작가', loveMatch:{ best:['ENFJA','ESFJA'], worst:['ENTJD','ESTJD'] }},
+      'ISFPA':{ group:'SF', strength:'즉흥적 창의성과 강한 실행력', weakness:'현재 감각 집중으로 미래 준비 부족', advice:'지금의 아름다움을 즐기면서 씨앗도 심어보세요', career:'패션 디자이너, 요리사', loveMatch:{ best:['ENFPA','ESTPA'], worst:['INTJD','ISTJD'] }},
+      'ESFPD':{ group:'SF', strength:'유머와 연출로 어디서든 분위기를 살림', weakness:'깊은 감정보다 표면적 즐거움에 머뭄', advice:'웃음 뒤의 진짜 감정도 소중하게 바라봐주세요', career:'배우, 인플루언서', loveMatch:{ best:['ISTPA','ESFPA'], worst:['INTJD','INFJD'] }},
+      'ESFPA':{ group:'SF', strength:'타고난 존재감과 열정으로 활력을 줌', weakness:'충동적 결정으로 후회하는 상황 발생', advice:'지금의 열정을 내일의 계획으로 연결하는 습관을 만들어요', career:'배우, 영업 전문가', loveMatch:{ best:['ISTPA','ISFPA'], worst:['INTJD','INFJD'] }}
+    };
+
+    // ========== 기존 코드 ==========
+    
+    // 연도/월/일 옵션 생성
+    const yearSelect = document.getElementById('input-year');
+    const monthSelect = document.getElementById('input-month');
+    const daySelect = document.getElementById('input-day');
+
+    for (let y = 1930; y <= 2010; y++) {
+      const option = document.createElement('option');
+      option.value = y;
+      option.textContent = y + '년';
+      if (y === 1990) option.selected = true;
+      yearSelect.appendChild(option);
+    }
+
+    for (let m = 1; m <= 12; m++) {
+      const option = document.createElement('option');
+      option.value = m;
+      option.textContent = m + '월';
+      monthSelect.appendChild(option);
+    }
+
+    for (let d = 1; d <= 31; d++) {
+      const option = document.createElement('option');
+      option.value = d;
+      option.textContent = d + '일';
+      daySelect.appendChild(option);
+    }
+
+    // 폼 제출
+    document.getElementById('saju-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('input-name').value.trim();
+      const year = document.getElementById('input-year').value;
+      const month = document.getElementById('input-month').value;
+      const day = document.getElementById('input-day').value;
+
+      if (!name) {
+        alert('이름을 입력해주세요');
+        return;
+      }
+
+      if (!year || !month || !day) {
+        alert('생년월일을 모두 선택해주세요');
+        return;
+      }
+
+      // 화면 전환
+      document.getElementById('screen-input').style.display = 'none';
+      document.getElementById('screen-loading').style.display = 'flex';
+      document.getElementById('loading-text').textContent = name + '님의 타고난 기질을 살펴보고 있어요...';
+
+      // 계산
+      setTimeout(() => {
+        try {
+          const hourVal = document.getElementById('input-hour').value;
+          const hour = hourVal === '' ? null : parseInt(hourVal);
+          const isLunar = document.getElementById('radio-lunar').checked;
+          const gender = document.getElementById('radio-female').checked ? 'F' : 'M';
+
+          const sajuData = calculateSaju(
+            parseInt(year),
+            parseInt(month),
+            parseInt(day),
+            hour,
+            isLunar,
+            gender
+          );
+
+          const contentData = getSajuContent(sajuData.일간);
+
+          console.log('일간:', sajuData.일간);
+          console.log('contentData:', contentData);
+          console.log('전체개관:', contentData ? contentData['전체개관'] : '없음');
+
+          if (!contentData) {
+            throw new Error('사주 콘텐츠를 불러올 수 없습니다.');
+          }
+
+          // 전역 변수 저장 (통합 리포트용)
+          window.currentName = name;
+          window.currentSajuData = sajuData;
+          window.currentContentData = contentData;
+
+          renderResult(sajuData, contentData, name);
+
+        } catch(e) {
+          alert('사주 계산 중 오류가 발생했어요. 다시 시도해주세요.\n' + e.message);
+          document.getElementById('screen-loading').style.display = 'none';
+          document.getElementById('screen-input').style.display = 'block';
+        }
+      }, 1000);
+    });
+
+    // 결과 렌더링
+    function renderResult(sajuData, contentData, name) {
+      // 화면 전환
+      document.getElementById('screen-loading').style.display = 'none';
+      document.getElementById('screen-result').style.display = 'block';
+      window.scrollTo(0, 0);
+
+      // 헤더 렌더링
+      document.getElementById('result-subtitle').textContent = name + '님의 사주팔자';
+
+      // 일간 뱃지
+      const ilganSymbol = sajuData.일간상징 || {};
+      if (ilganSymbol.emoji && ilganSymbol.name) {
+        document.getElementById('badge-ilgan').textContent = 
+          ilganSymbol.emoji + ' ' + ilganSymbol.name + ' (' + sajuData.일간 + ') — ' + ilganSymbol.symbol;
+      }
+
+      // 사주 카드
+      document.getElementById('year-characters').textContent = sajuData.연주.천간 + sajuData.연주.지지;
+      document.getElementById('month-characters').textContent = sajuData.월주.천간 + sajuData.월주.지지;
+      document.getElementById('day-characters').textContent = sajuData.일주.천간 + sajuData.일주.지지;
+      
+      if (sajuData.시주) {
+        document.getElementById('hour-characters').textContent = sajuData.시주.천간 + sajuData.시주.지지;
+      } else {
+        document.getElementById('hour-characters').textContent = '모름';
+      }
+
+      // 생년월일
+      document.getElementById('display-birthdate').textContent = sajuData.solarDate;
+
+      // 전체개관 섹션 렌더링 (추가 1)
+      const overviewNew = contentData['전체개관'];
+      if (overviewNew) {
+        document.getElementById('overview-subtitle-new').textContent = overviewNew.subtitle || '';
+        
+        // content를 단락별로 분리
+        const paragraphsNew = overviewNew.content.split('\n\n').filter(p => p.trim());
+        const contentHtmlNew = paragraphsNew.map(p => '<p>' + p.trim() + '</p>').join('');
+        document.getElementById('overview-content-new').innerHTML = contentHtmlNew;
+
+        // 키워드
+        if (overviewNew.keywords && Array.isArray(overviewNew.keywords)) {
+          const keywordsHtmlNew = overviewNew.keywords.map(k => 
+            '<span class="keyword-tag-new">' + k + '</span>'
+          ).join('');
+          document.getElementById('overview-keywords-new').innerHTML = keywordsHtmlNew;
+        }
+
+        // 인생 테마
+        if (overviewNew.lifeTheme) {
+          document.getElementById('overview-life-theme-new').textContent = overviewNew.lifeTheme;
+        }
+
+        // 강점/주의점
+        document.getElementById('overview-strength-new').textContent = overviewNew.strength || '';
+        document.getElementById('overview-caution-new').textContent = overviewNew.caution || '';
+      }
+
+      // 총운정리 섹션 렌더링 (추가 2)
+      const summary = contentData['총운정리'];
+      if (summary) {
+        // content 본문
+        if (summary.content) {
+          const summaryParagraphs = summary.content.split('\n\n').filter(p => p.trim());
+          const summaryContentHtml = summaryParagraphs.map(p => '<p>' + p.trim() + '</p>').join('');
+          document.getElementById('summary-content').innerHTML = summaryContentHtml;
+        }
+
+        // 핵심 메시지
+        if (summary.finalMessage) {
+          document.getElementById('summary-final-message').textContent = summary.finalMessage;
+        }
+
+        // 행운 정보
+        if (summary.luckyColor) {
+          document.getElementById('summary-lucky-color').textContent = summary.luckyColor;
+        }
+        if (summary.luckyNumber) {
+          document.getElementById('summary-lucky-number').textContent = summary.luckyNumber;
+        }
+        if (summary.goodDirection) {
+          document.getElementById('summary-good-direction').textContent = summary.goodDirection;
+        }
+      }
+
+      // 전체개관 렌더링
+      const overview = contentData['전체개관'];
+      console.log('overview 데이터:', overview);
+      
+      if (overview) {
+        console.log('전체개관 렌더링 시작');
+        document.getElementById('overview-subtitle').textContent = overview.subtitle || '';
+        
+        // content를 단락별로 분리
+        const paragraphs = overview.content.split('\n\n').filter(p => p.trim());
+        const contentHtml = paragraphs.map(p => '<p>' + p.trim() + '</p>').join('');
+        document.getElementById('overview-content').innerHTML = contentHtml;
+        console.log('전체개관 본문 렌더링 완료');
+
+        // 키워드
+        if (overview.keywords && Array.isArray(overview.keywords)) {
+          const keywordsHtml = overview.keywords.map(k => 
+            '<span class="keyword-tag">' + k + '</span>'
+          ).join('');
+          document.getElementById('overview-keywords').innerHTML = keywordsHtml;
+          console.log('키워드 렌더링 완료:', overview.keywords);
+        }
+
+        // 강점/주의점
+        document.getElementById('overview-strength').textContent = overview.strength || '';
+        document.getElementById('overview-caution').textContent = overview.caution || '';
+        console.log('강점/주의점 렌더링 완료');
+        
+        // 섹션 표시 확인
+        const sectionEl = document.getElementById('section-overview');
+        console.log('section-overview 요소:', sectionEl);
+        console.log('section-overview display:', window.getComputedStyle(sectionEl).display);
+      } else {
+        console.error('전체개관 데이터가 없습니다!');
+        document.getElementById('section-overview').innerHTML = 
+          '<p style="color: #d32f2f; padding: 20px;">전체개관 데이터를 불러올 수 없습니다. contentData: ' + JSON.stringify(Object.keys(contentData || {})) + '</p>';
+      }
+
+      // 스크롤 진행률 바
+      window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY;
+        const total = document.body.scrollHeight - window.innerHeight;
+        const pct = Math.min(100, (scrolled / total) * 100);
+        document.getElementById('progress-bar').style.width = pct + '%';
+      });
+    }
+
+    // ========== Phase 2-A: 통합 성향 리포트 로직 ==========
+
+    // 통합 분석 버튼 클릭
+    // 통합 분석 시작 버튼 (최신 SCAN 결과 자동 매칭)
+    document.getElementById('btn-go-scan').addEventListener('click', () => {
+      try {
+        // 최신 32 Spectrum 결과 가져오기
+        const scanResultsData = localStorage.getItem('SCAN_RESULT');
+        if (!scanResultsData) {
+          alert('32 Spectrum 검사 결과가 없습니다. 먼저 32 Spectrum 검사를 완료해주세요.');
+          return;
+        }
+
+        const scanResults = JSON.parse(scanResultsData);
+        if (!scanResults || scanResults.length === 0) {
+          alert('32 Spectrum 검사 결과가 없습니다. 먼저 32 Spectrum 검사를 완료해주세요.');
+          return;
+        }
+
+        // 최신 결과 (첫 번째)
+        const latestScanResult = scanResults[0];
+        const scanType = latestScanResult.typeCode;
+
+        if (!VALID_SCAN_TYPES.includes(scanType)) {
+          alert('저장된 32 Spectrum 결과가 올바르지 않습니다.');
+          return;
+        }
+
+        // 전역 변수에 저장
+        window.currentScanType = scanType;
+        window.currentScanData = latestScanResult.result;
+
+        // localStorage에 연결 정보 저장
+        const saved = JSON.parse(localStorage.getItem('saju_result') || '{}');
+        saved.scan = {
+          type: scanType,
+          scanResultId: latestScanResult.id,
+          linkedAt: new Date().toISOString()
+        };
+        localStorage.setItem('saju_result', JSON.stringify(saved));
+
+        // 통합 분석 화면으로 바로 이동
+        document.getElementById('screen-result').style.display = 'none';
+        renderIntegrated();
+      } catch (error) {
+        console.error('통합 분석 시작 오류:', error);
+        alert('통합 분석을 시작할 수 없습니다. 다시 시도해주세요.');
+      }
+    });
+
+    // 뒤로가기 버튼
+    document.getElementById('btn-scan-back').addEventListener('click', () => {
+      document.getElementById('screen-scan-input').style.display = 'none';
+      document.getElementById('screen-result').style.display = 'block';
+      window.scrollTo(0, 0);
+    });
+
+    // SCAN 유형 입력 실시간 검증
+    const inputScanType = document.getElementById('input-scan-type');
+    const scanTypeFeedback = document.getElementById('scan-type-feedback');
+    const btnStartIntegrated = document.getElementById('btn-start-integrated');
+
+    inputScanType.addEventListener('input', (e) => {
+      const value = e.target.value.toUpperCase();
+      e.target.value = value;
+
+      if (value.length < 5) {
+        inputScanType.classList.remove('valid', 'invalid');
+        scanTypeFeedback.classList.remove('valid', 'invalid');
+        scanTypeFeedback.textContent = '';
+        btnStartIntegrated.disabled = true;
+        return;
+      }
+
+      if (VALID_SCAN_TYPES.includes(value)) {
+        inputScanType.classList.remove('invalid');
+        inputScanType.classList.add('valid');
+        scanTypeFeedback.classList.remove('invalid');
+        scanTypeFeedback.classList.add('valid');
+        const nickname = SCAN_NICKNAME[value] || '';
+        const group = SCAN_DATA[value]?.group || '';
+        scanTypeFeedback.textContent = `${nickname} · ${group}그룹`;
+        btnStartIntegrated.disabled = false;
+      } else {
+        inputScanType.classList.remove('valid');
+        inputScanType.classList.add('invalid');
+        scanTypeFeedback.classList.remove('valid');
+        scanTypeFeedback.classList.add('invalid');
+        scanTypeFeedback.textContent = '올바른 유형 코드를 확인해주세요';
+        btnStartIntegrated.disabled = true;
+      }
+    });
+
+    // 통합 분석 시작 버튼
+    btnStartIntegrated.addEventListener('click', () => {
+      const scanType = inputScanType.value.toUpperCase();
+      
+      if (!VALID_SCAN_TYPES.includes(scanType)) {
+        alert('올바른 유형 코드를 입력해주세요');
+        return;
+      }
+
+      // localStorage에 저장
+      try {
+        const saved = JSON.parse(localStorage.getItem('saju_result') || '{}');
+        saved.scan = {
+          type: scanType,
+          linkedAt: new Date().toISOString()
+        };
+        localStorage.setItem('saju_result', JSON.stringify(saved));
+        window.currentScanType = scanType;
+      } catch (e) {
+        console.error('localStorage 저장 실패:', e);
+      }
+
+      // renderIntegrated 호출
+      renderIntegrated();
+    });
+
+    // ========== Phase 2-B: 통합 리포트 상수 ==========
+    
+    const combinedStrengthMsg = {
+      'NT-NT': '논리적 통찰과 전략적 실행이 합쳐질 때, 남들이 보지 못하는 곳에서 판을 바꾸는 힘이 생겨요.',
+      'NF-NF': '깊은 공감과 풍부한 직관이 합쳐질 때, 사람의 마음을 움직이는 진짜 영향력이 나와요.',
+      'ST-ST': '강한 원칙과 빠른 실행이 합쳐질 때, 어떤 목표든 반드시 달성하는 신뢰받는 사람이 돼요.',
+      'SF-SF': '따뜻한 배려와 섬세한 관계력이 합쳐질 때, 주변 모든 사람이 편안함을 느끼는 존재가 돼요.',
+      'NT-NF': '전략적 사고와 감성적 공감이 합쳐질 때, 논리와 마음을 동시에 얻는 설득력이 생겨요.',
+      'NF-NT': '전략적 사고와 감성적 공감이 합쳐질 때, 논리와 마음을 동시에 얻는 설득력이 생겨요.',
+      'NT-ST': '큰 그림을 그리는 눈과 빠른 실행력이 합쳐질 때, 비전을 현실로 만드는 희귀한 능력이 완성돼요.',
+      'ST-NT': '큰 그림을 그리는 눈과 빠른 실행력이 합쳐질 때, 비전을 현실로 만드는 희귀한 능력이 완성돼요.',
+      'NT-SF': '분석적 사고와 따뜻한 관계력이 합쳐질 때, 논리와 사람을 모두 챙기는 균형 잡힌 리더가 돼요.',
+      'SF-NT': '분석적 사고와 따뜻한 관계력이 합쳐질 때, 논리와 사람을 모두 챙기는 균형 잡힌 리더가 돼요.',
+      'NF-ST': '깊은 감성과 현실적 실행력이 합쳐질 때, 꿈을 현실로 만드는 실천하는 이상주의자가 돼요.',
+      'ST-NF': '깊은 감성과 현실적 실행력이 합쳐질 때, 꿈을 현실로 만드는 실천하는 이상주의자가 돼요.',
+      'NF-SF': '풍부한 직관과 따뜻한 배려가 합쳐질 때, 사람들이 진심으로 따르는 존재가 돼요.',
+      'SF-NF': '풍부한 직관과 따뜻한 배려가 합쳐질 때, 사람들이 진심으로 따르는 존재가 돼요.',
+      'ST-SF': '강한 실행력과 세심한 배려가 합쳐질 때, 성과와 관계 두 가지를 동시에 잡는 보기 드문 사람이 돼요.',
+      'SF-ST': '강한 실행력과 세심한 배려가 합쳐질 때, 성과와 관계 두 가지를 동시에 잡는 보기 드문 사람이 돼요.'
+    };
+
+    const relationMsg = {
+      'NT-NT': '지적인 대화와 서로의 독립성을 존중하는 관계에서 가장 빛나요. 감정 표현을 늘리는 연습이 관계의 깊이를 더해줘요.',
+      'NF-NF': '감성적 공감과 깊은 연결을 원해요. 때로는 현실적인 대화도 관계를 탄탄하게 만들어요.',
+      'ST-ST': '신뢰와 목표를 함께 달성하는 관계를 원해요. 감정을 나누는 시간이 더 깊은 유대감을 만들어요.',
+      'SF-SF': '따뜻하고 안정적인 관계에서 행복해요. 각자의 필요를 직접 말하는 연습이 더 건강한 관계를 만들어요.',
+      'NT-NF': '머리와 마음 중 어느 쪽으로 관계를 맺는지 스스로 탐색해보세요. 둘 다 당신이에요.',
+      'NF-NT': '머리와 마음 중 어느 쪽으로 관계를 맺는지 스스로 탐색해보세요. 둘 다 당신이에요.',
+      'NT-ST': '목표를 함께 달성하는 파트너십이 가장 잘 맞아요. 감정 나누는 시간도 챙겨보세요.',
+      'ST-NT': '목표를 함께 달성하는 파트너십이 가장 잘 맞아요. 감정 나누는 시간도 챙겨보세요.',
+      'NT-SF': '논리보다 감정으로 먼저 반응하는 것이 관계에서 당신을 편하게 해줘요.',
+      'SF-NT': '논리와 관계 두 가지 사이에서 어느 쪽이 더 편한지 스스로에게 물어보세요.',
+      'NF-ST': '마음의 소리를 더 자주 들어주는 시간이 당신을 회복시켜요.',
+      'ST-NF': '마음의 소리를 더 자주 들어주는 시간이 당신을 회복시켜요.',
+      'NF-SF': '꿈꾸는 나와 지금의 나 모두를 사랑하는 것이 관계의 출발점이에요.',
+      'SF-NF': '꿈꾸는 나와 지금의 나 모두를 사랑하는 것이 관계의 출발점이에요.',
+      'ST-SF': '지치지 않으려면 나를 먼저 채우는 시간이 필요해요.',
+      'SF-ST': '지치지 않으려면 나를 먼저 채우는 시간이 필요해요.'
+    };
+
+    const careerMsg = {
+      'NT-NT': '전략적 사고와 분석 능력이 빛나는 분야에서 일할 때 가장 성과가 높아요. 팀에서 전략가 역할을 맡으면 더 크게 성장해요.',
+      'NF-NF': '사람을 돕고 의미 있는 변화를 만드는 일에서 에너지를 얻어요. 번아웃을 막으려면 경계를 지키는 것이 중요해요.',
+      'ST-ST': '명확한 목표와 체계가 있는 환경에서 최고의 실력을 발휘해요.',
+      'SF-SF': '사람과 함께하는 일에서 행복을 느껴요. 자신의 가치를 과소평가하지 마세요.',
+      'NT-NF': '분석과 공감 두 가지를 요구하는 교육, 코칭, 컨설팅 분야가 두 강점을 동시에 발휘할 수 있어요.',
+      'NF-NT': '분석과 공감 두 가지를 요구하는 교육, 코칭, 컨설팅 분야가 두 강점을 동시에 발휘할 수 있어요.',
+      'NT-ST': '전략과 실행을 모두 할 수 있는 드문 사람이에요. 프로젝트 리드나 사업 개발에서 압도적 성과를 낼 수 있어요.',
+      'ST-NT': '전략과 실행을 모두 할 수 있는 드문 사람이에요. 프로젝트 리드나 사업 개발에서 압도적 성과를 낼 수 있어요.',
+      'NT-SF': 'HR, 조직 개발, 팀 리더십 역할이 잘 맞아요. 논리와 관계를 동시에 살릴 수 있어요.',
+      'SF-NT': 'HR, 조직 개발, 팀 리더십 역할이 잘 맞아요. 논리와 관계를 동시에 살릴 수 있어요.',
+      'NF-ST': '사회 혁신, 임팩트 비즈니스, 교육 분야에서 이상을 현실로 만드는 특별한 능력을 발휘해요.',
+      'ST-NF': '사회 혁신, 임팩트 비즈니스, 교육 분야에서 이상을 현실로 만드는 특별한 능력을 발휘해요.',
+      'NF-SF': '상담, 케어, 커뮤니티 분야에서 깊은 만족을 얻을 수 있어요.',
+      'SF-NF': '상담, 케어, 커뮤니티 분야에서 깊은 만족을 얻을 수 있어요.',
+      'ST-SF': '의료, 사회서비스, 교육 관리 분야에서 신뢰받는 전문가가 될 수 있어요.',
+      'SF-ST': '의료, 사회서비스, 교육 관리 분야에서 신뢰받는 전문가가 될 수 있어요.'
+    };
+
+    const growthMsg = {
+      'NT-NT': '이미 강한 사람이에요. 이제는 약한 곳을 직면하는 용기가 다음 레벨로 데려다줘요.',
+      'NF-NF': '감성이 넘쳐요. 그 감성을 현실의 언어로 번역하는 연습이 더 큰 영향력을 만들어요.',
+      'ST-ST': '실행력이 탁월해요. 방향을 자주 점검하는 습관이 더 오래, 더 멀리 가게 해줘요.',
+      'SF-SF': '배려심이 깊어요. 나를 먼저 채우는 것이 더 오래 빛날 수 있는 비결이에요.',
+      'NT-NF': '머리와 마음이 모두 있는 사람이에요. 어느 쪽이 진짜 나인지 탐색하는 여정이 성장이에요.',
+      'NF-NT': '머리와 마음이 모두 있는 사람이에요. 어느 쪽이 진짜 나인지 탐색하는 여정이 성장이에요.',
+      'NT-ST': '비전과 실행을 모두 가진 드문 조합이에요. 혼자 하려 하지 말고 함께하는 힘을 키워보세요.',
+      'ST-NT': '비전과 실행을 모두 가진 드문 조합이에요. 혼자 하려 하지 말고 함께하는 힘을 키워보세요.',
+      'NT-SF': '논리와 관계 사이에서 균형을 찾는 중이에요. 논리적인 나도, 배려하는 나도 모두 진짜 나예요.',
+      'SF-NT': '논리와 관계 사이에서 균형을 찾는 중이에요. 논리적인 나도, 배려하는 나도 모두 진짜 나예요.',
+      'NF-ST': '이상을 현실로 만드는 힘이 있어요. 완벽한 준비보다 작은 실험을 시작하는 용기가 필요해요.',
+      'ST-NF': '이상을 현실로 만드는 힘이 있어요. 완벽한 준비보다 작은 실험을 시작하는 용기가 필요해요.',
+      'NF-SF': '공감과 배려가 넘쳐요. 타인을 위하는 것만큼 나를 위한 시간도 꼭 챙겨보세요.',
+      'SF-NF': '공감과 배려가 넘쳐요. 타인을 위하는 것만큼 나를 위한 시간도 꼭 챙겨보세요.',
+      'ST-SF': '성과와 관계 두 마리 토끼를 잡으려 애쓰고 있어요. 지금 더 지친 쪽에 먼저 에너지를 주세요.',
+      'SF-ST': '성과와 관계 두 마리 토끼를 잡으려 애쓰고 있어요. 지금 더 지친 쪽에 먼저 에너지를 주세요.'
+    };
+
+    // renderIntegrated 함수 (Phase 2-B 구현)
+    function renderIntegrated() {
+      const name = window.currentName || '당신';
+      const sajuData = window.currentSajuData;
+      const contentData = window.currentContentData;
+      let scanType = window.currentScanType;
+      let scanData = window.currentScanData;
+
+      // scanType이 없으면 최신 SCAN 결과에서 가져오기
+      if (!scanType) {
+        try {
+          const scanResultsData = localStorage.getItem('SCAN_RESULT');
+          if (scanResultsData) {
+            const scanResults = JSON.parse(scanResultsData);
+            if (scanResults && scanResults.length > 0) {
+              const latestScanResult = scanResults[0];
+              scanType = latestScanResult.typeCode;
+              scanData = latestScanResult.result;
+              window.currentScanType = scanType;
+              window.currentScanData = scanData;
+            }
+          }
+        } catch (error) {
+          console.error('SCAN 결과 가져오기 오류:', error);
+        }
+      }
+
+      if (!sajuData || !contentData || !scanType) {
+        alert('통합 분석을 위한 데이터가 없습니다. 다시 시도해주세요.');
+        return;
+      }
+
+      // 화면 전환
+      document.getElementById('screen-scan-input').style.display = 'none';
+      document.getElementById('screen-integrated').style.display = 'block';
+      window.scrollTo(0, 0);
+
+      // 헤더 렌더링
+      document.getElementById('integrated-subtitle').textContent = name + '님의 선천 + 후천 성향 통합 분석';
+      
+      const ilganSymbol = sajuData.일간상징 || {};
+      const ilganName = ilganSymbol.name || sajuData.일간;
+      const ilganDesc = ilganSymbol.symbol || '';
+      document.getElementById('comparison-saju-type').textContent = ilganName + ' (' + sajuData.일간 + ')';
+      document.getElementById('comparison-saju-desc').textContent = ilganDesc;
+      
+      document.getElementById('comparison-scan-type').textContent = scanType;
+      document.getElementById('comparison-scan-desc').textContent = SCAN_NICKNAME[scanType] || '';
+
+      // 갭 계산
+      const sajuGroup = ILGAN_GROUP_MAP[sajuData.일간];
+      const scanGroup = SCAN_DATA[scanType].group;
+      const gapKey = sajuGroup + '-' + scanGroup;
+      const gapType = GAP_TYPE_MAP[gapKey];
+      const gap = GAP_CONTENT[gapType];
+
+      // 섹션 1: 나의 두 얼굴
+      const overview = contentData['전체개관'];
+      if (overview) {
+        document.getElementById('two-faces-original-type').textContent = 
+          (ilganSymbol.emoji || '🌱') + ' ' + ilganName;
+        document.getElementById('two-faces-original-content').textContent = overview.lifeTheme || '';
+        if (overview.keywords && Array.isArray(overview.keywords)) {
+          const keywordsHtml = overview.keywords.slice(0, 3).map(k => 
+            '<span class="two-faces-keyword">' + k + '</span>'
+          ).join('');
+          document.getElementById('two-faces-original-keywords').innerHTML = keywordsHtml;
+        }
+      }
+      
+      const scanStrength = SCAN_DATA[scanType].strength;
+      const firstSentence = scanStrength.split('.').slice(0, 1).join('.') + '.';
+      document.getElementById('two-faces-current-type').textContent = 
+        scanType + ' · ' + SCAN_NICKNAME[scanType];
+      document.getElementById('two-faces-current-content').textContent = firstSentence;
+
+      // 섹션 2: 갭 분석
+      const gapBadge = document.createElement('div');
+      gapBadge.className = 'gap-badge';
+      gapBadge.style.background = gap.bg;
+      gapBadge.style.color = gap.color;
+      gapBadge.textContent = gap.title;
+      document.getElementById('gap-badge-container').innerHTML = '';
+      document.getElementById('gap-badge-container').appendChild(gapBadge);
+
+      const isMatch = gapType === 'match';
+      const comparisonHtml = `
+        <div class="gap-group-card">
+          <div class="gap-group-name">${sajuGroup} 그룹</div>
+          <div class="gap-group-label">사주 기질</div>
+        </div>
+        <div class="gap-arrow" style="color: ${isMatch ? gap.color : '#999'};">
+          ${isMatch ? '→→→' : '↔'}
+        </div>
+        <div class="gap-group-card">
+          <div class="gap-group-name">${scanGroup} 그룹</div>
+          <div class="gap-group-label">SCAN 성향</div>
+        </div>
+      `;
+      document.getElementById('gap-comparison-container').innerHTML = comparisonHtml;
+      document.getElementById('gap-description').textContent = gap.description;
+      
+      const coachingBox = document.createElement('div');
+      coachingBox.className = 'gap-coaching-box';
+      coachingBox.style.background = gap.bg;
+      coachingBox.style.borderLeftColor = gap.color;
+      coachingBox.innerHTML = `
+        <div class="gap-coaching-label">💡 코칭 포인트</div>
+        <div class="gap-coaching-content">${gap.coaching}</div>
+      `;
+      document.getElementById('gap-coaching-box').innerHTML = '';
+      document.getElementById('gap-coaching-box').appendChild(coachingBox);
+
+      // 섹션 3: 통합 강점
+      if (overview) {
+        document.getElementById('strength-saju').textContent = overview.strength || '';
+      }
+      document.getElementById('strength-scan').textContent = scanStrength;
+      document.getElementById('combined-strength-msg').textContent = combinedStrengthMsg[gapKey] || '';
+
+      // 섹션 4: 관계 코칭
+      const loveFortune = contentData['애정운'];
+      if (loveFortune && loveFortune.content) {
+        const paragraphs = loveFortune.content.split('\n\n').filter(p => p.trim()).slice(0, 2);
+        document.getElementById('relation-saju').innerHTML = paragraphs.map(p => '<p>' + p.trim() + '</p>').join('');
+      }
+      
+      const loveMatch = SCAN_DATA[scanType].loveMatch;
+      if (loveMatch) {
+        const bestHtml = loveMatch.best.map(type => 
+          `<div class="relation-match-card best">💚 ${type} · ${SCAN_NICKNAME[type] || ''}</div>`
+        ).join('');
+        const worstHtml = loveMatch.worst.map(type => 
+          `<div class="relation-match-card worst">❌ ${type} · ${SCAN_NICKNAME[type] || ''}</div>`
+        ).join('');
+        document.getElementById('relation-scan-best').innerHTML = bestHtml;
+        document.getElementById('relation-scan-worst').innerHTML = worstHtml;
+      }
+      document.getElementById('relation-coaching-msg').textContent = relationMsg[gapKey] || '';
+
+      // 섹션 5: 커리어 코칭
+      const careerFortune = contentData['직업운'];
+      if (careerFortune && careerFortune.content) {
+        const paragraphs = careerFortune.content.split('\n\n').filter(p => p.trim()).slice(0, 2);
+        document.getElementById('career-saju').innerHTML = paragraphs.map(p => '<p>' + p.trim() + '</p>').join('');
+      }
+      document.getElementById('career-scan').textContent = SCAN_DATA[scanType].career || '';
+      document.getElementById('career-coaching-msg').textContent = careerMsg[gapKey] || '';
+
+      // 섹션 6: 성장 방향
+      if (overview) {
+        document.getElementById('growth-saju-caution').textContent = overview.caution || '';
+      }
+      document.getElementById('growth-scan-weakness').textContent = SCAN_DATA[scanType].weakness || '';
+      document.getElementById('growth-scan-advice').textContent = '❝ ' + SCAN_DATA[scanType].advice + ' ❞';
+      document.getElementById('growth-msg').textContent = growthMsg[gapKey] || '';
+
+      // 마무리
+      document.getElementById('closing-message').innerHTML = `
+        ${name}님,<br />
+        원래의 나와 지금의 나를 함께 마주했어요.<br /><br />
+        이 두 가지를 아는 것만으로도<br />
+        많은 것들이 다르게 보이기 시작할 거예요.<br /><br />
+        나다운 삶은 이미 그 안에 있어요.
+      `;
+
+      // 버튼 이벤트
+      document.getElementById('btn-integrated-back').onclick = () => {
+        document.getElementById('screen-integrated').style.display = 'none';
+        document.getElementById('screen-result').style.display = 'block';
+        window.scrollTo(0, 0);
+      };
+
+      document.getElementById('btn-back-to-result').onclick = () => {
+        document.getElementById('screen-integrated').style.display = 'none';
+        document.getElementById('screen-result').style.display = 'block';
+        window.scrollTo(0, 0);
+      };
+
+      document.getElementById('btn-share-result').onclick = () => {
+        const shareText = `✨ 나의 통합 성향 분석
+
+🌱 선천적 성향 (사주): ${ilganName}
+🔄 후천적 성향 (SCAN): ${scanType} · ${SCAN_NICKNAME[scanType]}
+
+📊 갭 분석: ${gap.title}
+${gap.coaching}
+
+💪 나만의 강점:
+${combinedStrengthMsg[gapKey]}`;
+        
+        navigator.clipboard.writeText(shareText).then(() => {
+          alert('결과가 클립보드에 복사되었습니다!');
+        }).catch(() => {
+          alert('복사에 실패했습니다. 다시 시도해주세요.');
+        });
+      };
+
+      // IntersectionObserver 페이드인 애니메이션
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, observerOptions);
+
+      // 모든 섹션에 페이드인 적용 (헤더 제외)
+      const sections = document.querySelectorAll('#screen-integrated .integrated-section, #screen-integrated > section');
+      sections.forEach(section => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(section);
+      });
+
+      // 통합 분석 결과 저장
+      try {
+        const integratedResult = {
+          id: 'integrated-' + Date.now(),
+          sajuData: {
+            name: name,
+            input: sajuData.input || {},
+            result: sajuData,
+            content: contentData
+          },
+          scanData: {
+            typeCode: scanType,
+            result: scanData || {},
+            nickname: SCAN_NICKNAME[scanType] || ''
+          },
+          analysis: {
+            gap: {
+              type: gapType,
+              key: gapKey,
+              title: gap.title,
+              subtitle: gap.subtitle,
+              description: gap.description,
+              coaching: gap.coaching,
+              color: gap.color,
+              bg: gap.bg
+            },
+            strength: {
+              saju: overview ? overview.strength : '',
+              scan: scanStrength,
+              combined: combinedStrengthMsg[gapKey] || ''
+            },
+            relation: {
+              saju: contentData['애정운'] ? contentData['애정운'].content.split('\n\n').slice(0, 2).join('\n\n') : '',
+              scan: {
+                best: SCAN_DATA[scanType].loveMatch ? SCAN_DATA[scanType].loveMatch.best : [],
+                worst: SCAN_DATA[scanType].loveMatch ? SCAN_DATA[scanType].loveMatch.worst : []
+              },
+              coaching: relationMsg[gapKey] || ''
+            },
+            career: {
+              saju: contentData['직업운'] ? contentData['직업운'].content.split('\n\n').slice(0, 2).join('\n\n') : '',
+              scan: SCAN_DATA[scanType].career || '',
+              coaching: careerMsg[gapKey] || ''
+            },
+            growth: {
+              saju: overview ? overview.caution : '',
+              scan: {
+                weakness: SCAN_DATA[scanType].weakness || '',
+                advice: SCAN_DATA[scanType].advice || ''
+              },
+              coaching: growthMsg[gapKey] || ''
+            }
+          },
+          createdAt: new Date().toISOString()
+        };
+
+        // localStorage에 저장 (최신 1개만)
+        localStorage.setItem('INTEGRATED_RESULT', JSON.stringify([integratedResult]));
+      } catch (error) {
+        console.error('통합 분석 결과 저장 실패:', error);
+      }
+    }
+  </script>
+</body>
+</html>

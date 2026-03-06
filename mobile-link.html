@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모바일 접속 링크 - MBTI 프로젝트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF9BB3 50%, #A8E6CF 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #5A4A42;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .subtitle {
+            color: #8B7355;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .link-box {
+            background: #FFF5F8;
+            border: 2px solid #FFB6C1;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+        
+        .link-text {
+            font-size: 16px;
+            color: #C85A7A;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .link-url {
+            font-size: 14px;
+            color: #5A4A42;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #FFE5F1;
+            word-break: break-all;
+        }
+        
+        .copy-button {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF9BB3 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .copy-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .copy-button:active {
+            transform: translateY(0);
+        }
+        
+        .success-message {
+            color: #4CAF50;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .qr-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #FFE5F1;
+        }
+        
+        .qr-title {
+            color: #5A4A42;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .qr-placeholder {
+            background: #F5F5F5;
+            border: 2px dashed #FFB6C1;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 20px 0;
+            color: #8B7355;
+            font-size: 14px;
+        }
+        
+        .instructions {
+            background: #E3F2FD;
+            border-left: 4px solid #64B5F6;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        
+        .instructions h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #5A4A42;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 모바일 접속 링크</h1>
+        <p class="subtitle">같은 Wi-Fi 네트워크에 연결된 모바일 기기에서 접속하세요</p>
+        
+        <div class="link-box">
+            <div class="link-text">서버 주소:</div>
+            <div class="link-url" id="linkUrl">http://10.23.174.83:5173</div>
+            <div style="margin-top: 20px;">
+                <div class="link-text">연애 유형 검사 바로가기:</div>
+                <div class="link-url" id="datingUrl">http://10.23.174.83:5173/dating/my-type</div>
+                <button class="copy-button" onclick="copyDatingLink()" style="margin-top: 10px;">연애 검사 링크 복사하기</button>
+            </div>
+            <button class="copy-button" onclick="copyLink()">링크 복사하기</button>
+            <div class="success-message" id="successMessage">✓ 링크가 클립보드에 복사되었습니다!</div>
+        </div>
+        
+        <div class="qr-section">
+            <div class="qr-title">QR 코드로 접속</div>
+            <div class="qr-placeholder">
+                📱<br>
+                QR 코드 스캐너 앱을 사용하여<br>
+                아래 링크를 스캔하세요
+            </div>
+            <div class="link-url" style="font-size: 12px; margin-top: 10px;">http://10.23.174.83:5173</div>
+            <div class="link-url" style="font-size: 12px; margin-top: 10px;">http://10.23.174.83:5173/dating/my-type</div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 접속 방법</h3>
+            <ol>
+                <li>모바일 기기와 PC가 같은 Wi-Fi 네트워크에 연결되어 있는지 확인하세요</li>
+                <li>모바일 기기의 브라우저에서 위 주소를 입력하거나</li>
+                <li>QR 코드 스캐너 앱으로 링크를 스캔하세요</li>
+                <li>서버가 실행 중이어야 접속이 가능합니다</li>
+            </ol>
+        </div>
+        
+        <div class="instructions" style="background: #FFF3E0; border-left-color: #FFB74D; margin-top: 15px;">
+            <h3>⚠️ 접속이 안 될 때 (방화벽 설정)</h3>
+            <ol>
+                <li><strong>Windows 방화벽 설정:</strong>
+                    <ul style="margin-top: 8px; margin-left: 20px; list-style-type: disc;">
+                        <li>Windows 검색에서 "방화벽" 검색</li>
+                        <li>"Windows Defender 방화벽" 열기</li>
+                        <li>"고급 설정" 클릭</li>
+                        <li>"인바운드 규칙" → "새 규칙" 클릭</li>
+                        <li>규칙 유형: "포트" 선택</li>
+                        <li>프로토콜: TCP, 특정 로컬 포트: 5173 입력</li>
+                        <li>작업: "연결 허용" 선택</li>
+                        <li>이름: "Vite Dev Server" 입력 후 완료</li>
+                    </ul>
+                </li>
+                <li style="margin-top: 10px;"><strong>또는 PowerShell을 관리자 권한으로 실행 후:</strong>
+                    <div style="background: #F5F5F5; padding: 10px; border-radius: 4px; margin-top: 8px; font-family: monospace; font-size: 12px;">
+                        netsh advfirewall firewall add rule name="Vite Dev Server" dir=in action=allow protocol=TCP localport=5173
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        function copyLink() {
+            const linkUrl = document.getElementById('linkUrl').textContent;
+            const successMessage = document.getElementById('successMessage');
+            
+            // 클립보드에 복사
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(linkUrl).then(() => {
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 3000);
+                }).catch(err => {
+                    console.error('복사 실패:', err);
+                    fallbackCopy(linkUrl);
+                });
+            } else {
+                fallbackCopy(linkUrl);
+            }
+        }
+        
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const successMessage = document.getElementById('successMessage');
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+            } catch (err) {
+                console.error('복사 실패:', err);
+                alert('링크를 수동으로 복사해주세요: ' + text);
+            }
+            document.body.removeChild(textArea);
+        }
+        
+        function copyDatingLink() {
+            const datingUrl = document.getElementById('datingUrl').textContent;
+            const successMessage = document.getElementById('successMessage');
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(datingUrl).then(() => {
+                    successMessage.textContent = '✓ 연애 검사 링크가 클립보드에 복사되었습니다!';
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                        successMessage.textContent = '✓ 링크가 클립보드에 복사되었습니다!';
+                    }, 3000);
+                }).catch(err => {
+                    console.error('복사 실패:', err);
+                    fallbackCopy(datingUrl);
+                });
+            } else {
+                fallbackCopy(datingUrl);
+            }
+        }
+    </script>
+</body>
+</html>

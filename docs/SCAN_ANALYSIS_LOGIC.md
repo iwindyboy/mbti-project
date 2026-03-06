@@ -1,0 +1,311 @@
+# SCAN 결과 분석 로직 정리
+
+## 📋 목차
+1. [개요](#개요)
+2. [입력 데이터 구조](#입력-데이터-구조)
+3. [점수 계산 프로세스](#점수-계산-프로세스)
+4. [유형 코드 생성](#유형-코드-생성)
+5. [Grey Zone 감지](#grey-zone-감지)
+6. [최종 결과 구조](#최종-결과-구조)
+7. [핵심 로직 요약](#핵심-로직-요약)
+
+---
+
+## 개요
+
+SCAN 검사는 **5개 축(EI, SN, FT, PJ, DA)**에 대해 각각 **6문항씩 총 30문항**을 통해 사용자의 성향을 분석합니다.
+
+**핵심 원리:**
+- 각 문항은 6단계 척도로 답변 (L3, L2, L1, R1, R2, R3)
+- 좌측/우측 성향 점수를 합산하여 각 축의 편차를 계산
+- 편차를 기반으로 최종 유형 코드(예: "ISFJA") 생성
+- 편차가 작은 경우 Grey Zone으로 판정
+
+---
+
+## 입력 데이터 구조
+
+### Answer 인터페이스
+```typescript
+interface Answer {
+  questionId: string;  // 질문 ID
+  score: number;       // 1~6점 (L3:1, L2:2, L1:3, R1:4, R2:5, R3:6)
+}
+```
+
+### Question 구조
+각 질문은 다음 정보를 포함합니다:
+- `id`: 질문 고유 ID
+- `axis`: 측정하는 축 ('EI', 'SN', 'FT', 'PJ', 'DA')
+- `measuredType`: 측정하는 성향 ('I', 'E', 'S', 'N', 'F', 'T', 'P', 'J', 'D', 'A')
+
+---
+
+## 점수 계산 프로세스
+
+### 1단계: 초기화
+```typescript
+// 각 축별 좌측/우측 성향 점수 합계 초기화
+const leftSums = { EI: 0, SN: 0, FT: 0, PJ: 0, DA: 0 };
+const rightSums = { EI: 0, SN: 0, FT: 0, PJ: 0, DA: 0 };
+```
+
+### 2단계: 축별 성향 매핑
+```typescript
+const axisTraitMap = {
+  'EI': { left: 'I', right: 'E' },  // 내향성 vs 외향성
+  'SN': { left: 'S', right: 'N' },  // 감각형 vs 직관형
+  'FT': { left: 'F', right: 'T' },  // 감정형 vs 사고형
+  'PJ': { left: 'P', right: 'J' },  // 인식형 vs 판단형
+  'DA': { left: 'D', right: 'A' },  // 신중형 vs 적응형
+};
+```
+
+### 3단계: 버튼 점수 변환
+**6단계 척도 배점:**
+- **L3 (버튼 1)**: 좌측 성향 3점, 우측 성향 0점
+- **L2 (버튼 2)**: 좌측 성향 2점, 우측 성향 0점
+- **L1 (버튼 3)**: 좌측 성향 1점, 우측 성향 0점
+- **R1 (버튼 4)**: 좌측 성향 0점, 우측 성향 1점
+- **R2 (버튼 5)**: 좌측 성향 0점, 우측 성향 2점
+- **R3 (버튼 6)**: 좌측 성향 0점, 우측 성향 3점
+
+```typescript
+function getButtonScore(score: number) {
+  if (score <= 3) {
+    // 왼쪽 버튼: 좌측 성향 점수
+    return { leftScore: 4 - score, rightScore: 0 };
+  } else {
+    // 오른쪽 버튼: 우측 성향 점수
+    return { leftScore: 0, rightScore: score - 3 };
+  }
+}
+```
+
+### 4단계: 질문 유형별 점수 배분
+
+#### Case 1: 좌측 성향을 측정하는 질문 (I, S, F, P, D)
+```typescript
+if (q.measuredType === axisTraits.left) {
+  // 예: "나는 혼자 있는 시간을 선호한다" (I 성향 측정)
+  // 우측 버튼 선택(매우 그렇다) → 좌측 성향(I)에 점수 추가
+  // 좌측 버튼 선택(매우 아니다) → 우측 성향(E)에 점수 추가
+  leftSums[q.axis] += rightScore;   // 우측 버튼 → 좌측 성향
+  rightSums[q.axis] += leftScore;  // 좌측 버튼 → 우측 성향
+}
+```
+
+#### Case 2: 우측 성향을 측정하는 질문 (E, N, T, J, A)
+```typescript
+else if (q.measuredType === axisTraits.right) {
+  // 예: "나는 사람들과 어울리는 것을 좋아한다" (E 성향 측정)
+  // 우측 버튼 선택(매우 그렇다) → 우측 성향(E)에 점수 추가
+  // 좌측 버튼 선택(매우 아니다) → 좌측 성향(I)에 점수 추가
+  rightSums[q.axis] += rightScore;  // 우측 버튼 → 우측 성향
+  leftSums[q.axis] += leftScore;    // 좌측 버튼 → 좌측 성향
+}
+```
+
+### 5단계: 편차 계산
+```typescript
+// 각 축별 편차 = 우측 성향 점수 - 좌측 성향 점수
+const totals = {
+  EI: rightSums['EI'] - leftSums['EI'],
+  SN: rightSums['SN'] - leftSums['SN'],
+  FT: rightSums['FT'] - leftSums['FT'],
+  PJ: rightSums['PJ'] - leftSums['PJ'],
+  DA: rightSums['DA'] - leftSums['DA'],
+};
+```
+
+**편차 해석:**
+- `totals['EI'] > 0`: 외향성(E) 성향
+- `totals['EI'] < 0`: 내향성(I) 성향
+- `totals['EI'] = 0`: 균형 (Grey Zone)
+
+---
+
+## 유형 코드 생성
+
+### 판정 규칙
+각 축의 편차(`totalDiff`)를 기반으로 유형 코드를 생성합니다:
+
+```typescript
+const typeCode = [
+  totals['EI'] > 0 ? 'E' : 'I',  // 외향성 vs 내향성
+  totals['SN'] > 0 ? 'N' : 'S',  // 직관형 vs 감각형
+  totals['FT'] > 0 ? 'T' : 'F',  // 사고형 vs 감정형
+  totals['PJ'] > 0 ? 'J' : 'P',  // 판단형 vs 인식형
+  totals['DA'] > 0 ? 'A' : 'D',  // 적응형 vs 신중형
+].join('');
+```
+
+**예시:**
+- `totals = { EI: 5, SN: -2, FT: 8, PJ: -1, DA: 3 }`
+- → `typeCode = "ISFJA"` (I, S, F, J, A)
+
+---
+
+## Grey Zone 감지
+
+### 판정 기준
+**Grey Zone**: 편차 절댓값이 **3 이하**인 경우
+
+```typescript
+const isGrey = Math.abs(totalDiff) <= 3;
+```
+
+### 상세 분석 분류
+```typescript
+function getDetailedAnalysis(totalDiff: number) {
+  if (totalDiff > 3) return 'STRONG_POSITIVE';   // 매우 뚜렷한 우측 성향
+  if (totalDiff < -3) return 'STRONG_NEGATIVE';  // 매우 뚜렷한 좌측 성향
+  return 'GRAY_ZONE';                            // 유연한/중립적 성향
+}
+```
+
+### Grey Zone 배지
+Grey Zone 축의 개수에 따라 배지가 부여됩니다:
+
+| Grey Zone 개수 | 배지 이름 |
+|---------------|----------|
+| 1개 | Flexible Adapter |
+| 2개 | Balanced Explorer |
+| 3개 | Adaptive Navigator |
+| 4개 | Versatile Harmonizer |
+| 5개 | Universal Adapter |
+
+---
+
+## 최종 결과 구조
+
+### CalculateResult 인터페이스
+```typescript
+interface CalculateResult {
+  typeCode: string;                    // 예: "ISFJA"
+  scores: Record<string, number>;      // 각 축당 totalDiff
+  leftSums: Record<string, number>;    // 각 축당 좌측 성향 점수 합계
+  rightSums: Record<string, number>;   // 각 축당 우측 성향 점수 합계
+  summary: {
+    isExtrovert: boolean;    // E 성향 여부
+    isSensing: boolean;      // S 성향 여부
+    isFeeling: boolean;      // F 성향 여부
+    isPerceiving: boolean;   // P 성향 여부
+    isDeliberate: boolean;   // D 성향 여부
+  };
+  greyZones: GreyZoneInfo[];           // Grey Zone 축 목록
+  badge: string | null;                 // Grey Zone 배지
+  axisAnalysis: Record<string, AxisAnalysis>;  // 각 축별 상세 분석
+  isGrayZone: Record<string, boolean>;  // 각 축별 Grey Zone 여부
+}
+```
+
+### 결과 예시
+```typescript
+{
+  typeCode: "ISFJA",
+  scores: {
+    EI: -5,   // I 성향 (내향성)
+    SN: -2,   // S 성향 (감각형) - Grey Zone
+    FT: 8,    // T 성향 (사고형)
+    PJ: -1,   // J 성향 (판단형) - Grey Zone
+    DA: 3     // A 성향 (적응형) - Grey Zone
+  },
+  leftSums: { EI: 15, SN: 12, FT: 3, PJ: 11, DA: 9 },
+  rightSums: { EI: 10, SN: 10, FT: 11, PJ: 10, DA: 12 },
+  summary: {
+    isExtrovert: false,
+    isSensing: true,
+    isFeeling: false,
+    isPerceiving: false,
+    isDeliberate: false
+  },
+  greyZones: [
+    { axis: 'SN', score: -2 },
+    { axis: 'PJ', score: -1 },
+    { axis: 'DA', score: 3 }
+  ],
+  badge: "Adaptive Navigator",
+  axisAnalysis: {
+    EI: 'STRONG_NEGATIVE',
+    SN: 'GRAY_ZONE',
+    FT: 'STRONG_POSITIVE',
+    PJ: 'GRAY_ZONE',
+    DA: 'GRAY_ZONE'
+  },
+  isGrayZone: {
+    EI: false,
+    SN: true,
+    FT: false,
+    PJ: true,
+    DA: true
+  }
+}
+```
+
+---
+
+## 핵심 로직 요약
+
+### 🔄 전체 프로세스 흐름
+
+```
+1. 입력 검증
+   ↓
+2. 각 축별 좌측/우측 점수 합계 초기화
+   ↓
+3. 각 답변에 대해:
+   - 버튼 점수를 좌측/우측 점수로 변환
+   - 질문의 measuredType에 따라 적절한 합계 변수에 점수 추가
+   ↓
+4. 각 축별 편차 계산 (rightSum - leftSum)
+   ↓
+5. 편차를 기반으로 유형 코드 생성
+   ↓
+6. Grey Zone 감지 (편차 절댓값 <= 3)
+   ↓
+7. 최종 결과 반환
+```
+
+### 📊 점수 범위
+
+**각 축당 가능한 점수 범위:**
+- **좌측/우측 합계**: 6 ~ 30점 (각 축당 6문항 × 1~3점)
+- **편차(totalDiff)**: -24 ~ +24점
+  - 최소: 모든 문항이 L3 선택 → leftSum=18, rightSum=0 → totalDiff=-18
+  - 최대: 모든 문항이 R3 선택 → leftSum=0, rightSum=18 → totalDiff=+18
+
+**실제로는:**
+- 각 문항이 1~3점씩 배점되므로
+- 한 축의 총합은 6~18점 범위
+- 편차는 -12 ~ +12점 범위
+
+### ⚠️ 주의사항
+
+1. **역채점 로직**: 질문의 `measuredType`에 따라 점수 배분이 반대로 적용됩니다.
+2. **Grey Zone 판정**: 편차가 0이거나 절댓값이 3 이하일 때 Grey Zone으로 판정됩니다.
+3. **유형 코드**: 편차가 0이어도 `> 0` 조건에 따라 한쪽 성향으로 판정됩니다.
+
+---
+
+## 관련 파일
+
+- **계산 로직**: `src/utils/calculate.ts`
+- **결과 타입**: `src/utils/calculate.ts` (CalculateResult 인터페이스)
+- **결과 표시**: `src/components/ResultPage.tsx`
+- **데이터 저장**: `src/utils/storage.ts`
+
+---
+
+## 디버깅 팁
+
+계산 과정에서 콘솔에 다음 정보가 출력됩니다:
+```javascript
+calculateScanResult: leftSums = { EI: 15, SN: 12, ... }
+calculateScanResult: rightSums = { EI: 10, SN: 10, ... }
+calculateScanResult: totals (totalDiff) = { EI: -5, SN: -2, ... }
+calculateScanResult: counts = { EI: 6, SN: 6, ... }
+calculateScanResult: Generated typeCode = ISFJA
+```
+
+이 정보를 통해 각 단계의 계산 결과를 확인할 수 있습니다.

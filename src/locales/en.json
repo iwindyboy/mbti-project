@@ -1,0 +1,98 @@
+{
+  "common": {
+    "appName": "SCAN",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "menu": {
+    "main": "Main",
+    "intro": "SCAN Introduction",
+    "survey": "SCAN Personality Test (Basic)",
+    "dating": "Heart-fluttering Love Test (Love)",
+    "career": "God-life Career Test (Work)",
+    "persona": "My Persona Test (Relationships)",
+    "share": "Share Test Results",
+    "history": "View Test History",
+    "language": "Language",
+    "myResults": "View My Past Results"
+  },
+  "landing": {
+    "topLabel": "Personality · Love · Relationships",
+    "mainHeadline": "Your fleeting tendencies,\nSCAN will analyze them for you.",
+    "startButton": "Start SCAN Personality Test",
+    "introButton": "SCAN Introduction",
+    "otherTestButton": "Other Personality Tests"
+  },
+  "intro": {
+    "mainTitle": "SCAN : 32bits Personalities",
+    "subtitle": "Reading myself more finely, more like myself\nHigh-resolution personality analysis",
+    "question1": "\"What kind of person am I?\"",
+    "answer1": "SCAN is a test that tries to answer this question without rushing,\nbut accurately.",
+    "question2": "\"Am I sensitive?\"\n\"Why do I find it particularly difficult in these situations?\"",
+    "answer2": "It's okay not to blame yourself first.\nThe problem is not you,\nbut perhaps the way your tendencies are being used.",
+    "section1Title": "What makes SCAN different?",
+    "section2Title": "5 Personality Axes That Create Your Coordinates",
+    "section3Title": "What changes if you SCAN?",
+    "warningTitle": "Before we start, please promise one thing",
+    "warningText": "Intuitive answers are the most accurate data.\nDon't think too deeply.\nChoose the side your first feeling goes to.\nYour honesty, without overthinking each question for more than 10 seconds,\ncreates the most accurate results.",
+    "footerTitle": "32bits Personalities",
+    "footerText": "Now, shall we understand ourselves a little more clearly?",
+    "startButton": "Start SCAN Personality Test"
+  },
+  "survey": {
+    "title": "SCAN Personality Test",
+    "step": "Step",
+    "instruction": "Intuitive answers may be the most accurate data.\nDon't think too deeply, check with your first feeling!",
+    "previousButton": "Previous",
+    "nextButton": "Next Step",
+    "resultButton": "View Results",
+    "hint": "Please answer all questions in this group",
+    "answered": "Answered"
+  },
+  "result": {
+    "title": "Personality Analysis Results",
+    "basicReport": "Basic Report",
+    "premiumReport": "Learn More with Premium Report",
+    "resetButton": "Take Test Again",
+    "shareButton": "Share Results"
+  },
+  "pages": {
+    "dating": {
+      "title": "Heart-fluttering Love Test",
+      "description": "Love-related content will be added soon."
+    },
+    "career": {
+      "title": "God-life Career Test",
+      "description": "Career-related content will be added soon."
+    },
+    "persona": {
+      "title": "My Persona Test",
+      "description": "Relationship-related content will be added soon."
+    },
+    "share": {
+      "title": "Share Test Results",
+      "description": "Test result sharing feature will be added soon."
+    },
+    "history": {
+      "title": "View Test History",
+      "description": "Test history feature will be added soon."
+    },
+    "language": {
+      "title": "Language Settings",
+      "description": "Language settings feature will be added soon."
+    },
+    "myResults": {
+      "title": "View My Past Results",
+      "noResults": "No saved results.",
+      "date": "Test Date",
+      "typeCode": "Type",
+      "viewDetail": "View Detail"
+    }
+  }
+}

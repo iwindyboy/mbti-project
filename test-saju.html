@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사주 계산 엔진 테스트</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      background: #FFFFFF;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #5A4A42;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .summary {
+      background: #F9F7F2;
+      border: 2px solid #E8D5C4;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .summary h2 {
+      color: #5A4A42;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .summary .result {
+      font-size: 32px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .summary .pass {
+      color: #2E7D32;
+    }
+
+    .summary .fail {
+      color: #D32F2F;
+    }
+
+    .test-case {
+      background: #FFFFFF;
+      border: 2px solid #E8D5C4;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .test-case.error {
+      background: #FFEBEE;
+      border-color: #D32F2F;
+    }
+
+    .test-case.pass {
+      background: #E8F5E9;
+      border-color: #2E7D32;
+    }
+
+    .test-case-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .test-case-number {
+      background: #C85A7A;
+      color: #FFFFFF;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      margin-right: 15px;
+    }
+
+    .test-case-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #5A4A42;
+    }
+
+    .test-case-description {
+      color: #8B7355;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .test-details {
+      background: #F9F7F2;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+
+    .test-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 8px 0;
+    }
+
+    .test-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .test-label {
+      font-weight: 600;
+      color: #5A4A42;
+      min-width: 100px;
+      margin-right: 15px;
+    }
+
+    .test-value {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .test-value.expected {
+      color: #1976D2;
+    }
+
+    .test-value.actual {
+      color: #388E3C;
+    }
+
+    .test-value.error {
+      color: #D32F2F;
+      font-weight: bold;
+    }
+
+    .test-result {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+
+    .test-result.pass {
+      background: #C8E6C9;
+      color: #1B5E20;
+    }
+
+    .test-result.fail {
+      background: #FFCDD2;
+      color: #B71C1C;
+    }
+
+    .input-info {
+      background: #E3F2FD;
+      border-left: 4px solid #2196F3;
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #8B7355;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔮 사주 계산 엔진 테스트</h1>
+    
+    <div id="summary" class="summary">
+      <h2>전체 요약</h2>
+      <div class="result" id="summaryResult">테스트 실행 중...</div>
+    </div>
+
+    <div id="testResults"></div>
+  </div>
+
+  <!-- 4. 인라인 스크립트: 앱 코드 (외부 파일 로드 후 실행) -->
+  <script>
+    // 스크립트 동적 로드 함수
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+          console.log(`✅ ${src} 로드 완료`);
+          resolve();
+        };
+        script.onerror = () => {
+          console.warn(`⚠️ ${src} 로드 실패 (파일이 없을 수 있음)`);
+          resolve(); // 파일이 없어도 계속 진행
+        };
+        document.head.appendChild(script);
+      });
+    }
+
+    // 스크립트 순차 로드 (순서 중요!)
+    async function loadAllScripts() {
+      try {
+        // 1. saju-calendar.js (없어도 계속 진행)
+        await loadScript('saju-calendar.js');
+        
+        // 2. saju-db.js
+        await loadScript('saju/saju-db.js');
+        
+        // 3. saju-engine.js
+        await loadScript('saju-engine.js');
+        
+        // 모든 스크립트 로드 완료 후 테스트 실행
+        if (typeof calculateSaju === 'undefined') {
+          throw new Error('calculateSaju 함수를 찾을 수 없습니다. saju-engine.js가 올바르게 로드되었는지 확인하세요.');
+        }
+        
+        console.log('✅ 모든 스크립트 로드 완료');
+        runTests();
+      } catch (error) {
+        document.getElementById('summaryResult').innerHTML = `
+          <span class="fail">❌ 오류: ${error.message}</span>
+          <div style="margin-top: 10px; font-size: 14px;">
+            <strong>확인 사항:</strong><br>
+            1. saju-engine.js 파일이 같은 폴더에 있는지 확인<br>
+            2. 브라우저 콘솔(F12)에서 스크립트 로드 오류 확인<br>
+            3. script 태그 순서: saju-calendar.js → saju-db.js → saju-engine.js
+          </div>
+        `;
+        console.error('스크립트 로드 오류:', error);
+      }
+    }
+
+    // 페이지 로드 시 스크립트 로드 시작
+    window.addEventListener('load', () => {
+      loadAllScripts();
+    });
+    // 테스트 케이스 정의
+    const testCases = [
+      {
+        number: 1,
+        title: '입춘 이전 출생 → 전년도 연주 사용',
+        description: '양력 1995년 2월 3일 (입춘 이전이므로 1994년 기준)',
+        input: { year: 1995, month: 2, day: 3, hour: null, isLunar: false, gender: 'male' },
+        checkField: 'yearPillar.full',
+        expected: '甲戌'
+      },
+      {
+        number: 2,
+        title: '입춘 당일 출생 → 해당연도 연주 사용',
+        description: '양력 1995년 2월 4일 (입춘 당일부터 1995년 기준)',
+        input: { year: 1995, month: 2, day: 4, hour: null, isLunar: false, gender: 'male' },
+        checkField: 'yearPillar.full',
+        expected: '乙亥'
+      },
+      {
+        number: 3,
+        title: '연초 입춘 이전 출생',
+        description: '양력 2000년 1월 1일 (2000년 입춘 이전 → 1999년 기준)',
+        input: { year: 2000, month: 1, day: 1, hour: null, isLunar: false, gender: 'male' },
+        checkField: 'yearPillar.full',
+        expected: '己卯'
+      },
+      {
+        number: 4,
+        title: '음력 → 양력 변환',
+        description: '음력 1990년 5월 15일',
+        input: { year: 1990, month: 5, day: 15, hour: null, isLunar: true, gender: 'male' },
+        checkField: 'solarDate',
+        expected: '1990년 6월 8일'
+      },
+      {
+        number: 5,
+        title: '일주 계산',
+        description: '양력 1986년 4월 19일',
+        input: { year: 1986, month: 4, day: 19, hour: null, isLunar: false, gender: 'male' },
+        checkField: 'dayPillar.full',
+        expected: '甲申'
+      },
+      {
+        number: 6,
+        title: '시주 계산 - 시간 있음',
+        description: '양력 1990년 1월 1일, 오전 10시',
+        input: { year: 1990, month: 1, day: 1, hour: 10, isLunar: false, gender: 'male' },
+        checkField: 'hourPillar.branch',
+        expected: '巳'
+      },
+      {
+        number: 7,
+        title: '시주 계산 - 시간 모름',
+        description: '양력 1990년 1월 1일, 시간 모름',
+        input: { year: 1990, month: 1, day: 1, hour: null, isLunar: false, gender: 'male' },
+        checkField: 'hourPillar.full',
+        expected: '??' // null이거나 undefined면 정상
+      }
+    ];
+
+    // 필드 경로로 값 가져오기
+    function getFieldValue(obj, path) {
+      const keys = path.split('.');
+      let value = obj;
+      for (const key of keys) {
+        if (value === null || value === undefined) return null;
+        value = value[key];
+      }
+      return value;
+    }
+
+    // 날짜 포맷팅
+    function formatDate(year, month, day) {
+      return `${year}년 ${month}월 ${day}일`;
+    }
+
+    // 테스트 실행
+    function runTests() {
+      const results = [];
+      let passCount = 0;
+
+      testCases.forEach(testCase => {
+        try {
+          // calculateSaju 함수 호출
+          const result = calculateSaju(
+            testCase.input.year,
+            testCase.input.month,
+            testCase.input.day,
+            testCase.input.hour,
+            testCase.input.isLunar,
+            testCase.input.gender
+          );
+
+          // 결과 객체 구성
+          const resultObj = {
+            yearPillar: {
+              full: result.연주?.천간 + result.연주?.지지 || 'N/A',
+              stem: result.연주?.천간 || 'N/A',
+              branch: result.연주?.지지 || 'N/A'
+            },
+            monthPillar: {
+              full: result.월주?.천간 + result.월주?.지지 || 'N/A',
+              stem: result.월주?.천간 || 'N/A',
+              branch: result.월주?.지지 || 'N/A'
+            },
+            dayPillar: {
+              full: result.일주?.천간 + result.일주?.지지 || 'N/A',
+              stem: result.일주?.천간 || 'N/A',
+              branch: result.일주?.지지 || 'N/A'
+            },
+            hourPillar: {
+              full: result.시주 ? (result.시주.천간 + result.시주.지지) : null,
+              stem: result.시주?.천간 || null,
+              branch: result.시주?.지지 || null
+            },
+            solarDate: result.solarDate || null,
+            ilgan: result.일간 || 'N/A',
+            ohang: result.오행 || 'N/A'
+          };
+
+          // 실제값 추출
+          const actual = getFieldValue(resultObj, testCase.checkField);
+          const expected = testCase.expected;
+
+          // 비교 (케이스 7은 null/undefined/??면 통과)
+          let passed = false;
+          if (testCase.number === 7) {
+            passed = actual === null || actual === undefined || String(actual) === '??';
+          } else {
+            passed = String(actual) === String(expected);
+          }
+
+          if (passed) passCount++;
+
+          results.push({
+            ...testCase,
+            result: resultObj,
+            actual: actual,
+            passed: passed,
+            error: null
+          });
+        } catch (error) {
+          results.push({
+            ...testCase,
+            result: null,
+            actual: null,
+            passed: false,
+            error: error.message
+          });
+        }
+      });
+
+      // 결과 렌더링
+      renderResults(results, passCount);
+    }
+
+    // 결과 렌더링
+    function renderResults(results, passCount) {
+      const summaryDiv = document.getElementById('summaryResult');
+      const total = results.length;
+      const percentage = Math.round((passCount / total) * 100);
+
+      summaryDiv.innerHTML = `
+        <span class="${passCount === total ? 'pass' : 'fail'}">
+          ${passCount}/${total} 통과 (${percentage}%)
+        </span>
+      `;
+
+      const testResultsDiv = document.getElementById('testResults');
+      testResultsDiv.innerHTML = results.map((test, index) => {
+        const inputStr = test.input.isLunar 
+          ? `음력 ${test.input.year}년 ${test.input.month}월 ${test.input.day}일`
+          : `양력 ${test.input.year}년 ${test.input.month}월 ${test.input.day}일`;
+        const hourStr = test.input.hour !== null ? `, ${test.input.hour}시` : ', 시간 모름';
+
+        return `
+          <div class="test-case ${test.passed ? 'pass' : 'error'}">
+            <div class="test-case-header">
+              <div class="test-case-number">${test.number}</div>
+              <div class="test-case-title">${test.title}</div>
+            </div>
+            <div class="test-case-description">${test.description}</div>
+            
+            ${test.error ? `
+              <div class="input-info" style="background: #FFEBEE; border-color: #D32F2F;">
+                <strong>❌ 오류 발생:</strong> ${test.error}
+              </div>
+            ` : `
+              <div class="input-info">
+                <strong>입력:</strong> ${inputStr}${hourStr}
+              </div>
+              
+              <div class="test-details">
+                <div class="test-row">
+                  <span class="test-label">확인 항목:</span>
+                  <span class="test-value">${test.checkField}</span>
+                </div>
+                <div class="test-row">
+                  <span class="test-label">예상값 --> 결과값:</span>
+                  <span class="test-value ${test.passed ? 'actual' : 'error'}">
+                    ${test.expected === '??' ? '??' : (test.expected || 'null/undefined')} --> ${test.actual !== null && test.actual !== undefined ? String(test.actual) : (test.expected === '??' ? 'null/undefined' : 'null/undefined')}
+                  </span>
+                  <span class="test-result ${test.passed ? 'pass' : 'fail'}">
+                    ${test.passed ? '✅ 정확' : '❌ 오류'}
+                  </span>
+                </div>
+                ${!test.passed ? `
+                  <div class="test-row" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #E8D5C4;">
+                    <span class="test-label">전체 결과:</span>
+                    <span class="test-value" style="font-size: 14px;">
+                      연주: ${test.result?.yearPillar?.full || 'N/A'} | 
+                      월주: ${test.result?.monthPillar?.full || 'N/A'} | 
+                      일주: ${test.result?.dayPillar?.full || 'N/A'} | 
+                      시주: ${test.result?.hourPillar?.full || 'N/A'} | 
+                      일간: ${test.result?.ilgan || 'N/A'} | 
+                      오행: ${test.result?.ohang || 'N/A'}
+                    </span>
+                  </div>
+                ` : ''}
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+  </script>
+</body>
+</html>
