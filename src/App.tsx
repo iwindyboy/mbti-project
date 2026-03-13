@@ -5,6 +5,7 @@ import { getOrCreateUserId } from './utils/uuid';
 import { LandingPage } from './pages/LandingPage';
 import { QuestionPage } from './pages/QuestionPage';
 import { ResultPageWrapper } from './pages/ResultPageWrapper';
+import ResultPage from './pages/result';
 import { TypeDetailPage } from './pages/TypeDetailPage';
 import { IntroPage } from './pages/IntroPage';
 import { DatingPage } from './pages/DatingPage';
@@ -25,6 +26,7 @@ import { IntegratedResultPage } from './pages/IntegratedResultPage';
 import { IntegratedReportPage } from './pages/IntegratedReportPage';
 import { SpectrumIntroPage } from './pages/SpectrumIntroPage';
 import { SajuIntroPage } from './pages/SajuIntroPage';
+import { IntegratedResultCardPage } from './pages/IntegratedResultCardPage';
 import { SideMenu } from './components/SideMenu';
 import { HamburgerMenu } from './components/HamburgerMenu';
 
@@ -55,7 +57,8 @@ function App() {
         <Route path="/spectrum-intro" element={<SpectrumIntroPage />} />
         <Route path="/saju-intro" element={<SajuIntroPage />} />
         <Route path="/survey" element={<QuestionPage />} />
-        <Route path="/result" element={<ResultPageWrapper />} />
+        <Route path="/result" element={<ResultPage />} />
+        <Route path="/result-old" element={<ResultPageWrapper />} />
         <Route path="/type/:typeCode" element={<TypeDetailPage />} />
         <Route path="/dating" element={<DatingPage />} />
         <Route path="/dating/intro" element={<DatingIntroPage />} />
@@ -73,6 +76,7 @@ function App() {
         <Route path="/scan-result" element={<ScanResultPage />} />
         <Route path="/integrated-result" element={<IntegratedResultPage />} />
         <Route path="/integrated-report" element={<IntegratedReportPage />} />
+        <Route path="/integrated-result-card" element={<IntegratedResultCardPage />} />
         <Route path="*" element={<Navigate to="/landing" replace />} />
       </Routes>
     </BrowserRouter>

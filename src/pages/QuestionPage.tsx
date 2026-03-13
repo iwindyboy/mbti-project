@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { GroupPage } from '../components/GroupPage';
 import { questionGroups } from '../constants/questions';
 import { calculateScanResult, Answer as CalculateAnswer } from '../utils/calculate';
+import { saveScanResult } from '../utils/storage';
+import { createResultCard } from '../utils/resultCard';
 
 export const QuestionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ export const QuestionPage: React.FC = () => {
   };
 
   // 다음 그룹으로 이동
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentGroupIndex < totalGroups - 1) {
       setCurrentGroupIndex(currentGroupIndex + 1);
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -45,6 +47,16 @@ export const QuestionPage: React.FC = () => {
         // 결과 데이터를 저장 (React Native 호환을 위해)
         if (typeof window !== 'undefined' && window.sessionStorage) {
           sessionStorage.setItem('scanResult', JSON.stringify(result));
+        }
+        
+        // localStorage에 결과 저장 (영구 저장)
+        try {
+          const resultCard = createResultCard(result);
+          await saveScanResult(result, resultCard.typeCode, 'basic');
+          console.log('32 Spectrum 결과 저장 완료:', resultCard.typeCode);
+        } catch (error) {
+          console.error('32 Spectrum 결과 저장 실패:', error);
+          // 저장 실패해도 계속 진행
         }
         
         // React Native WebView 환경인지 확인

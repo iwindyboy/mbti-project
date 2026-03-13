@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-combinations.json을 읽어서 Supabase saju_combinations 테이블에 bulk insert
+중복 정리 및 재삽입 스크립트
+테이블을 비우고 320개 레코드를 다시 삽입합니다.
 """
 
 import json
@@ -25,16 +26,13 @@ def load_environment():
     env_file = project_root / '.env'
     
     if env_file.exists():
-        load_dotenv(env_file)
-        print(f'✅ .env 파일 로드 완료: {env_file}')
+        load_dotenv(env_file, encoding='utf-8')
+        print(f'✅ .env 파일 로드 완료: {env_file}\n')
     else:
-        print(f'⚠️  .env 파일을 찾을 수 없습니다: {env_file}')
-        print('환경 변수를 직접 설정하거나 .env 파일을 생성해주세요.')
+        print(f'⚠️  .env 파일을 찾을 수 없습니다: {env_file}\n')
     
-    # SUPABASE_URL 또는 VITE_SUPABASE_URL 확인
     supabase_url = os.getenv('SUPABASE_URL') or os.getenv('VITE_SUPABASE_URL')
-    # SUPABASE_KEY 또는 VITE_SUPABASE_PUBLISHABLE_KEY 확인
-    supabase_key = os.getenv('SUPABASE_KEY') or os.getenv('VITE_SUPABASE_PUBLISHABLE_KEY') or os.getenv('SUPABASE_ANON_KEY')
+    supabase_key = os.getenv('SUPABASE_KEY') or os.getenv('VITE_SUPABASE_PUBLISHABLE_KEY')
     
     if not supabase_url:
         raise ValueError('SUPABASE_URL 또는 VITE_SUPABASE_URL 환경 변수가 설정되지 않았습니다.')
@@ -69,13 +67,10 @@ def validate_record(record: Dict[str, Any]) -> bool:
     
     for field in required_fields:
         if field not in record:
-            print(f'⚠️  필수 필드 누락: {field}')
             return False
     
-    # combo_type 검증
     valid_combo_types = ['일치형', '보완형', '갭형']
     if record['combo_type'] not in valid_combo_types:
-        print(f'⚠️  잘못된 combo_type: {record["combo_type"]}')
         return False
     
     return True
@@ -100,6 +95,61 @@ def prepare_record(record: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def delete_all_records(supabase: Client):
+    """테이블의 모든 레코드 삭제"""
+    print('\n🗑️  기존 레코드 삭제 중...')
+    try:
+        # 모든 레코드 조회
+        response = supabase.table('saju_combinations').select('id').execute()
+        total_count = len(response.data) if response.data else 0
+        
+        if total_count == 0:
+            print('   ℹ️  삭제할 레코드가 없습니다.')
+            return
+        
+        print(f'   발견된 레코드: {total_count}개')
+        
+        # 모든 레코드 삭제 (Supabase는 DELETE 쿼리를 직접 지원하지 않으므로)
+        # 각 레코드를 개별 삭제하거나, SQL을 사용해야 함
+        # 여기서는 모든 ID를 가져와서 삭제
+        
+        deleted = 0
+        batch_size = 100
+        
+        # ID 목록을 배치로 나눠서 삭제
+        ids = [record['id'] for record in response.data]
+        
+        for i in range(0, len(ids), batch_size):
+            batch_ids = ids[i:i+batch_size]
+            for record_id in batch_ids:
+                try:
+                    supabase.table('saju_combinations').delete().eq('id', record_id).execute()
+                    deleted += 1
+                except Exception as e:
+                    print(f'   ⚠️  레코드 {record_id} 삭제 실패: {str(e)}')
+            
+            print(f'   진행률: {min(i+batch_size, len(ids))}/{len(ids)}')
+        
+        print(f'✅ {deleted}개 레코드 삭제 완료')
+        
+    except Exception as e:
+        print(f'❌ 삭제 중 오류 발생: {str(e)}')
+        # SQL을 사용한 삭제 시도
+        print('   SQL 삭제를 시도합니다...')
+        try:
+            # Supabase Python 클라이언트로는 직접 SQL 실행이 어려우므로
+            # RPC 함수를 사용하거나, 모든 레코드를 다시 조회해서 삭제
+            response = supabase.table('saju_combinations').select('id').execute()
+            if response.data:
+                for record in response.data:
+                    supabase.table('saju_combinations').delete().eq('id', record['id']).execute()
+                print('✅ SQL 삭제 완료')
+        except Exception as e2:
+            print(f'❌ SQL 삭제도 실패: {str(e2)}')
+            print('   ⚠️  수동으로 Supabase 대시보드에서 테이블을 비워주세요.')
+            raise
+
+
 def insert_batch(
     supabase: Client,
     batch: List[Dict[str, Any]],
@@ -110,10 +160,8 @@ def insert_batch(
     errors = []
     
     try:
-        # Supabase bulk insert (리스트를 직접 전달)
         response = supabase.table('saju_combinations').insert(batch).execute()
         
-        # 응답에서 삽입된 레코드 수 확인
         if hasattr(response, 'data') and response.data:
             inserted_count = len(response.data)
         else:
@@ -124,7 +172,6 @@ def insert_batch(
         return inserted_count, errors
         
     except Exception as e:
-        # 에러 발생 시 각 레코드를 개별적으로 시도
         error_msg = str(e)
         print(f'❌ 배치 {batch_num}/{total_batches} 실패: {error_msg}')
         print(f'   개별 레코드 삽입 시도 중...')
@@ -155,17 +202,6 @@ def insert_batch(
         return inserted_count, errors
 
 
-def verify_table_count(supabase: Client) -> int:
-    """테이블의 총 레코드 수 조회"""
-    try:
-        response = supabase.table('saju_combinations').select('id', count='exact').execute()
-        count = response.count if hasattr(response, 'count') else len(response.data)
-        return count
-    except Exception as e:
-        print(f'⚠️  레코드 수 조회 실패: {str(e)}')
-        return -1
-
-
 def main():
     """메인 함수"""
     try:
@@ -177,6 +213,9 @@ def main():
         print('🔌 Supabase 클라이언트 연결 중...')
         supabase: Client = create_client(supabase_url, supabase_key)
         print('✅ Supabase 연결 성공')
+        
+        # 기존 레코드 삭제
+        delete_all_records(supabase)
         
         # JSON 파일 로드
         print('\n📄 JSON 파일 로드 중...')
@@ -248,16 +287,18 @@ def main():
         
         # 테이블 검증
         print('\n🔍 테이블 레코드 수 검증 중...')
-        table_count = verify_table_count(supabase)
-        
-        if table_count >= 0:
-            print(f'✅ 테이블 총 레코드 수: {table_count}개')
-            if table_count == total_records:
-                print('✅ 예상 레코드 수와 일치합니다!')
-            else:
-                print(f'⚠️  예상 레코드 수({total_records})와 다릅니다.')
-        else:
-            print('⚠️  레코드 수를 확인할 수 없습니다.')
+        try:
+            response = supabase.table('saju_combinations').select('id', count='exact').execute()
+            table_count = response.count if hasattr(response, 'count') else len(response.data)
+            
+            if table_count >= 0:
+                print(f'✅ 테이블 총 레코드 수: {table_count}개')
+                if table_count == total_records:
+                    print('✅ 예상 레코드 수와 일치합니다!')
+                else:
+                    print(f'⚠️  예상 레코드 수({total_records})와 다릅니다.')
+        except Exception as e:
+            print(f'⚠️  레코드 수를 확인할 수 없습니다: {str(e)}')
         
     except FileNotFoundError as e:
         print(f'❌ 파일 오류: {e}')
