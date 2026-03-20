@@ -1,10 +1,18 @@
 // ══════════════════════════════════════════════════════════════
-//  오행-Spectrum 매핑 & 일치도 계산 엔진
+//  오행-Spectrum 매핑 & 일치도 계산 엔진 v2.0
 //  선천(사주 천간) ↔ 후천(32 Spectrum) 갭 분석
 //
 //  본 통합 분석은 동양 명리학의 천간 해석과 성향 심리학 이론을
 //  바탕으로 독자적으로 연구·개발한 SCAN 프레임워크입니다.
+//
+//  v1 대비 핵심 개선:
+//  ① Grey Zone 해석에 천간 페르소나(axisNarrative) 반영
+//  ② 전체 해석/성장 메시지에 천간 메타포 반영
+//  ③ 일치도 라벨 summary 천간 맥락화
+//  ④ 점수 계산 로직은 변경 없음 (100% 호환)
 // ══════════════════════════════════════════════════════════════
+
+import { getCoachingPersona } from './coachingContent';
 
 // ═══════════ 타입 정의 ═══════════
 
@@ -143,6 +151,7 @@ const CORE_AXIS_WEIGHT = 1.5;
 const NORMAL_AXIS_WEIGHT = 1.0;
 
 // ═══════════ 메인 함수 ═══════════
+// ※ 점수 계산 로직 v1과 100% 동일 — 변경 없음
 
 export function calculateAlignment(
   ilgan: string,
@@ -209,8 +218,8 @@ export function calculateAlignment(
   // 최종 점수
   const totalScore = Math.round(weightedSum / weightTotal);
 
-  // 라벨 결정
-  const { label, labelEn, emoji, summary } = getAlignmentLabel(totalScore);
+  // v2: 라벨 결정 시 천간 맥락 반영
+  const { label, labelEn, emoji, summary } = getAlignmentLabel(totalScore, profile.name, ilgan);
 
   return {
     totalScore,
@@ -225,41 +234,56 @@ export function calculateAlignment(
   };
 }
 
-// ═══════════ 라벨 결정 ═══════════
+// ═══════════ 라벨 결정 — v2: 천간 맥락 반영 ═══════════
 
-function getAlignmentLabel(score: number): {
+function getAlignmentLabel(
+  score: number,
+  cheonganName: string,
+  ilgan: string
+): {
   label: string;
   labelEn: string;
   emoji: string;
   summary: string;
 } {
+  const persona = getCoachingPersona(ilgan);
+  const metaphor = persona?.metaphor || cheonganName;
+
   if (score >= 85) {
     return {
       label: '깊은 일치형',
       labelEn: 'Deep Alignment',
       emoji: '🟢',
-      summary: '타고난 기질이 그대로 발현되고 있습니다. 선천적 강점을 더욱 깊이 발전시켜 나가세요.'
+      summary: persona
+        ? `${metaphor}의 기운이 지금 삶에서 강하게 빛나고 있어요. "${persona.coreDrive}" — 이 본능이 그대로 발현되고 있습니다. 타고난 강점을 더욱 깊이 발전시켜 나가세요.`
+        : `타고난 기질이 그대로 발현되고 있습니다. ${cheonganName}의 선천적 강점을 더욱 깊이 발전시켜 나가세요.`
     };
   } else if (score >= 65) {
     return {
       label: '자연스러운 조화형',
       labelEn: 'Natural Harmony',
       emoji: '🔵',
-      summary: '대체로 일치하며, 일부 영역에서 새로운 성장의 여지가 있습니다.'
+      summary: persona
+        ? `${metaphor}의 기운을 잘 살리면서, 일부 영역에서 새로운 가능성도 열어가고 있어요. 타고난 리듬을 유지하면서 성장의 여지를 탐색해보세요.`
+        : `대체로 일치하며, 일부 영역에서 새로운 성장의 여지가 있습니다.`
     };
   } else if (score >= 45) {
     return {
       label: '보완형',
       labelEn: 'Complementary',
       emoji: '🟡',
-      summary: '선천과 후천이 서로 보완하며, 성향의 폭을 넓히고 있습니다.'
+      summary: persona
+        ? `${metaphor}의 본래 기운과 후천적으로 키운 역량이 서로를 보완하며 당신만의 색깔을 만들어가고 있어요. 이 "복합성"이 오히려 강점이에요.`
+        : `선천과 후천이 서로 보완하며, 성향의 폭을 넓히고 있습니다.`
     };
   } else {
     return {
       label: '전환형',
       labelEn: 'Transformed',
       emoji: '🟠',
-      summary: '후천적 경험으로 기질이 크게 변화했습니다. 이 변화 속에 숨겨진 성장을 발견하세요.'
+      summary: persona
+        ? `${metaphor}의 기운을 토대로, 삶의 경험이 당신을 완전히 새로운 방향으로 성장시키고 있어요. 이 변화 안에 숨겨진 독보적 강점을 발견해보세요. ${persona.growthKey}`
+        : `후천적 경험으로 기질이 크게 변화했습니다. 이 변화 속에 숨겨진 성장을 발견하세요.`
     };
   }
 }
@@ -284,7 +308,7 @@ export function getExpectedTypeCode(ilgan: string): string | null {
   ].join('');
 }
 
-// ═══════════ Grey Zone 심화 분석 ═══════════
+// ═══════════ Grey Zone 심화 분석 — v2: 천간 맥락 반영 ═══════════
 
 export interface GreyZoneAnalysis {
   overallInterpretation: string;    // 전체 해석
@@ -304,8 +328,9 @@ export interface GreyZoneDetail {
 }
 
 /**
- * Grey Zone 심화 분석
+ * Grey Zone 심화 분석 v2
  * 사주(선천)와 교차하여 Grey Zone의 의미를 깊이 해석
+ * 천간 페르소나의 axisNarrative 활용
  */
 export function analyzeGreyZones(
   ilgan: string,
@@ -322,6 +347,7 @@ export function analyzeGreyZones(
     };
   }
 
+  const persona = getCoachingPersona(ilgan);
   const axes: Axis[] = ['EI', 'SN', 'FT', 'PJ', 'DA'];
   const details: GreyZoneDetail[] = [];
 
@@ -334,14 +360,32 @@ export function analyzeGreyZones(
     const sajuLabel = sajuDir === 'LEFT' ? AXIS_LABELS[axis].left : AXIS_LABELS[axis].right;
     const oppositeLabel = sajuDir === 'LEFT' ? AXIS_LABELS[axis].right : AXIS_LABELS[axis].left;
 
-    // 교차 해석 생성
-    const interpretation = isCoreAxis
-      ? `${profile.name}의 핵심 특성인 ${sajuLabel} 성향이 후천적으로 유연해졌습니다. 이는 ${oppositeLabel}의 장점도 흡수하며 성장했다는 의미입니다.`
-      : `선천적으로 ${sajuLabel} 성향이지만, 경험을 통해 ${oppositeLabel}의 가치도 이해하게 되었습니다.`;
+    // v2: 천간 페르소나의 axisNarrative 활용
+    const narrative = persona?.axisNarrative[axis];
 
-    const opportunity = isCoreAxis
-      ? `이 축은 ${profile.name}의 핵심 영역입니다. 양쪽 모두를 활용할 수 있는 지금의 유연함은 큰 강점이에요. 상황에 따라 의식적으로 선택하는 연습을 하면 더 강력해집니다.`
-      : `${sajuLabel}의 깊이와 ${oppositeLabel}의 넓이를 모두 갖출 수 있는 잠재력이 있어요. 다양한 환경에서 실험하며 나만의 최적점을 찾아보세요.`;
+    // 교차 해석 생성 — v2: 구체적 맥락 반영
+    let interpretation: string;
+    if (narrative) {
+      interpretation = isCoreAxis
+        ? `${profile.name}의 핵심 특성에서 ${sajuLabel} 성향이 자연스럽지만, 당신은 후천적으로 ${oppositeLabel}의 장점도 키워왔어요. ${narrative.natural} — 이 본래의 힘 위에 반대편의 유연함이 더해져서, 상황에 따라 양쪽을 전환할 수 있는 드문 역량을 가지게 되었어요.`
+        : `선천적으로는 ${sajuLabel} 성향이지만, 살아오면서 ${oppositeLabel}의 가치도 자연스럽게 체득했어요. ${narrative.tension} — 이 경험이 오히려 양쪽을 이해할 수 있는 균형감각을 선물했어요.`;
+    } else {
+      interpretation = isCoreAxis
+        ? `${profile.name}의 핵심 특성인 ${sajuLabel} 성향이 후천적으로 유연해졌습니다. 이는 ${oppositeLabel}의 장점도 흡수하며 성장했다는 의미입니다.`
+        : `선천적으로 ${sajuLabel} 성향이지만, 경험을 통해 ${oppositeLabel}의 가치도 이해하게 되었습니다.`;
+    }
+
+    // 성장 기회 — v2: gift 활용
+    let opportunity: string;
+    if (narrative) {
+      opportunity = isCoreAxis
+        ? `이 축은 ${profile.name}의 핵심 영역인데 Grey Zone이라는 건 엄청난 잠재력이에요. 당신 안에는 ${narrative.gift}이 있어요. 상황에 따라 의식적으로 한쪽 모드를 선택하는 연습을 하면, 이 유연함이 독보적 무기가 됩니다.`
+        : `당신 안에는 ${narrative.gift}이 있어요. ${sajuLabel}의 깊이와 ${oppositeLabel}의 넓이를 모두 갖출 수 있는 잠재력이 열려 있어요. 일주일 동안 의도적으로 한쪽 모드로 생활해보면, 나만의 최적점이 보이기 시작해요.`;
+    } else {
+      opportunity = isCoreAxis
+        ? `이 축은 ${profile.name}의 핵심 영역입니다. 양쪽 모두를 활용할 수 있는 지금의 유연함은 큰 강점이에요. 상황에 따라 의식적으로 선택하는 연습을 하면 더 강력해집니다.`
+        : `${sajuLabel}의 깊이와 ${oppositeLabel}의 넓이를 모두 갖출 수 있는 잠재력이 있어요. 다양한 환경에서 실험하며 나만의 최적점을 찾아보세요.`;
+    }
 
     details.push({
       axis,
@@ -355,13 +399,13 @@ export function analyzeGreyZones(
 
   const greyZoneCount = details.length;
 
-  // 개수별 전체 해석
+  // v2: 전체 해석에 천간 메타포 반영
   const { greyZoneLabel, overallInterpretation } = getOverallGreyZoneInterpretation(
-    greyZoneCount, profile.name
+    greyZoneCount, profile.name, ilgan
   );
 
-  // 성장 메시지
-  const growthMessage = getGreyZoneGrowthMessage(greyZoneCount, details);
+  // v2: 성장 메시지에 천간 맥락 반영
+  const growthMessage = getGreyZoneGrowthMessage(greyZoneCount, details, ilgan);
 
   return {
     overallInterpretation,
@@ -372,39 +416,67 @@ export function analyzeGreyZones(
   };
 }
 
+// v2: 천간 메타포 반영
 function getOverallGreyZoneInterpretation(
   count: number,
-  cheonganName: string
+  cheonganName: string,
+  ilgan: string
 ): { greyZoneLabel: string; overallInterpretation: string } {
+  const persona = getCoachingPersona(ilgan);
+  const metaphor = persona?.metaphor || cheonganName;
+
   if (count === 0) {
     return {
       greyZoneLabel: '확고한 성향',
-      overallInterpretation: `모든 축에서 뚜렷한 성향을 보이고 있습니다. ${cheonganName}의 선천적 기질이 후천적으로도 명확하게 자리잡았거나, 자신만의 확고한 방향을 형성한 상태입니다.`
+      overallInterpretation: persona
+        ? `모든 축에서 뚜렷한 성향을 보이고 있어요. ${metaphor}의 선천적 기질이 후천적으로도 명확하게 자리잡았거나, 삶의 경험이 확고한 방향을 만들어낸 상태예요. 이 일관성이 당신의 큰 강점이에요.`
+        : `모든 축에서 뚜렷한 성향을 보이고 있습니다. ${cheonganName}의 선천적 기질이 후천적으로도 명확하게 자리잡았거나, 자신만의 확고한 방향을 형성한 상태입니다.`
     };
   } else if (count <= 2) {
     return {
       greyZoneLabel: '유연한 탐색가',
-      overallInterpretation: `${count}개 영역에서 유연한 적응력을 보입니다. 대부분의 성향은 뚜렷하지만, 일부 영역에서 양쪽의 장점을 모두 활용할 수 있는 균형감각을 갖추고 있습니다. 이는 다양한 상황에 적응하면서 자연스럽게 키운 역량입니다.`
+      overallInterpretation: persona
+        ? `${count}개 영역에서 유연한 적응력을 보여요. ${metaphor}의 기운으로 대부분의 방향은 뚜렷하지만, 일부 영역에서 양쪽의 장점을 모두 사용할 수 있는 "멀티 모드"가 열려 있어요. 이건 다양한 경험이 만든 자산이에요.`
+        : `${count}개 영역에서 유연한 적응력을 보입니다. 대부분의 성향은 뚜렷하지만, 일부 영역에서 양쪽의 장점을 모두 활용할 수 있는 균형감각을 갖추고 있습니다.`
     };
   } else {
     return {
       greyZoneLabel: '자유로운 적응자',
-      overallInterpretation: `${count}개 영역에서 Grey Zone이 감지되었습니다. 이는 후천적 경험이 풍부하여 다양한 상황에서 유연하게 대처할 수 있다는 뜻입니다. ${cheonganName}의 선천적 기질을 토대로, 고정된 틀을 넘어 자유롭게 성장하고 있습니다.`
+      overallInterpretation: persona
+        ? `${count}개 영역에서 Grey Zone이 감지되었어요. 이건 "결정을 못 한 것"이 아니라, 후천적 경험이 풍부해서 다양한 상황에서 유연하게 대처할 수 있다는 뜻이에요. ${metaphor}의 선천적 기질을 토대로, 고정된 틀을 넘어 자유롭게 성장하고 있어요.`
+        : `${count}개 영역에서 Grey Zone이 감지되었습니다. 이는 후천적 경험이 풍부하여 다양한 상황에서 유연하게 대처할 수 있다는 뜻입니다. ${cheonganName}의 선천적 기질을 토대로, 고정된 틀을 넘어 자유롭게 성장하고 있습니다.`
     };
   }
 }
 
-function getGreyZoneGrowthMessage(count: number, details: GreyZoneDetail[]): string {
+// v2: 천간 맥락 반영 성장 메시지
+function getGreyZoneGrowthMessage(
+  count: number,
+  details: GreyZoneDetail[],
+  ilgan: string
+): string {
+  const persona = getCoachingPersona(ilgan);
+
   if (count === 0) {
-    return '뚜렷한 성향은 일관된 강점이 됩니다. 가끔 반대쪽 관점을 의도적으로 탐색하면 시야가 더 넓어질 수 있어요.';
+    return persona
+      ? `뚜렷한 성향은 일관된 강점이 돼요. ${persona.growthKey} — 가끔 반대쪽 관점을 가볍게 탐색해보면, 기존 강점이 더 입체적으로 빛나요.`
+      : '뚜렷한 성향은 일관된 강점이 됩니다. 가끔 반대쪽 관점을 의도적으로 탐색하면 시야가 더 넓어질 수 있어요.';
   }
 
   const hasCoreGreyZone = details.some(d => d.isCoreAxis);
 
   if (hasCoreGreyZone) {
     const coreDetail = details.find(d => d.isCoreAxis)!;
+    const narrative = persona?.axisNarrative[coreDetail.axis as Axis];
+
+    if (persona && narrative) {
+      return `특히 ${coreDetail.axisLabel}은 당신의 핵심 특성 영역인데 Grey Zone에 있어요. ${narrative.gift} — 이 잠재력을 의식적으로 활용하면, 한쪽에만 머무는 사람들이 갖지 못한 독보적인 강점이 됩니다. ${persona.growthKey}`;
+    }
+
     return `특히 ${coreDetail.axisLabel}은 당신의 핵심 특성 영역인데 Grey Zone에 있습니다. 이는 선천적 기질이 후천적 경험과 만나 더 넓은 스펙트럼으로 확장되고 있다는 뜻이에요. 이 유연함을 의식적으로 활용하면 다른 사람들이 갖지 못한 독보적인 강점이 됩니다.`;
   }
 
-  return 'Grey Zone의 유연함은 다양한 환경에서 적응할 수 있는 잠재력입니다. 어떤 상황에서 어떤 모드가 더 편안한지 관찰하면서, 나만의 최적 패턴을 발견해보세요.';
+  return persona
+    ? `Grey Zone의 유연함은 다양한 환경에서 적응할 수 있는 잠재력이에요. 어떤 상황에서 어떤 모드가 더 편안한지 관찰하면서, 나만의 최적 패턴을 발견해보세요. ${persona.growthKey}`
+    : 'Grey Zone의 유연함은 다양한 환경에서 적응할 수 있는 잠재력입니다. 어떤 상황에서 어떤 모드가 더 편안한지 관찰하면서, 나만의 최적 패턴을 발견해보세요.';
 }

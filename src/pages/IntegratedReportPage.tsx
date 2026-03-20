@@ -378,11 +378,24 @@ export const IntegratedReportPage: React.FC = () => {
           <div style={styles.sectionNumber}>04</div>
           <div>
             <h2 style={styles.sectionTitle}>맞춤 코칭</h2>
-            <p style={styles.sectionSubtitle}>통합 분석 기반 성장 가이드</p>
+            <p style={styles.sectionSubtitle}>
+              {sajuSymbol.name}의 선천적 기운 × 후천적 성장을 위한 맞춤 가이드
+            </p>
           </div>
         </div>
 
         <div style={styles.sectionContent}>
+          {/* 천간별 종합 코칭 메시지 */}
+          {analysis.coaching.overallMessage && (
+            <div style={styles.overallMessageCard}>
+              <div style={styles.overallMessageIcon}>💌</div>
+              <div style={styles.overallMessageTitle}>당신에게 전하는 코칭 메시지</div>
+              <div style={styles.overallMessageText}>
+                {analysis.coaching.overallMessage}
+              </div>
+            </div>
+          )}
+
           {/* 성장 방향 */}
           <div style={styles.coachingCard}>
             <h3 style={styles.coachingTitle}>📈 {analysis.coaching.growthDirection.title}</h3>
@@ -949,6 +962,31 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '15px',
     color: '#2D1B40',
     lineHeight: '1.7',
+  },
+  overallMessageCard: {
+    background: 'linear-gradient(135deg, #F5F0FF 0%, #FFF8F0 100%)',
+    borderRadius: '20px',
+    padding: '28px 24px',
+    marginBottom: '28px',
+    border: '1px solid rgba(139, 58, 139, 0.15)',
+    textAlign: 'center' as const,
+  },
+  overallMessageIcon: {
+    fontSize: '32px',
+    marginBottom: '12px',
+  },
+  overallMessageTitle: {
+    fontSize: '16px',
+    fontWeight: '700' as const,
+    color: '#8B3A8B',
+    marginBottom: '16px',
+    letterSpacing: '0.5px',
+  },
+  overallMessageText: {
+    fontSize: '16px',
+    color: '#2D1B40',
+    lineHeight: '1.9',
+    wordBreak: 'keep-all' as const,
   },
   footer: {
     display: 'flex',
