@@ -471,11 +471,21 @@ export const IntegratedReportPage: React.FC = () => {
             if (s >= 45) return '🟡';
             return '🟠';
           })()}
+          ohang={report.saju.result.오행}
           matchedAxes={(() => {
             const result = calculateAlignment(report.saju.result.일간, report.scan.result.scores);
             return result.matchedAxes;
           })()}
+          gapAxes={(() => {
+            const result = calculateAlignment(report.saju.result.일간, report.scan.result.scores);
+            return result.gapAxes;
+          })()}
+          greyZoneAxes={(() => {
+            const result = calculateAlignment(report.saju.result.일간, report.scan.result.scores);
+            return result.greyZoneAxes;
+          })()}
           greyZoneCount={report.scan.result.greyZones?.length || 0}
+          lifeTheme={report.analysis.insights.lifeTheme}
           onClose={() => setShowShareCard(false)}
         />
       )}
