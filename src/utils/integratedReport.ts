@@ -7,6 +7,8 @@ import { SajuResult } from './sajuEngine';
 import { CalculateResult } from './calculate';
 import { SajuFortune, ILGAN_SYMBOL, Cheongan } from '../data/sajuDb';
 import { SCAN_TYPE_DETAILS } from '../data/scanResultData';
+import { calculateAlignment, getCheonganProfile, analyzeGreyZones } from './saju/alignmentMapper';
+import { generateAxisCoaching } from './saju/coachingContent';
 
 // ══════════════════════════════════════════════════════════════
 //  타입 정의
@@ -222,83 +224,58 @@ function analyzeAlignment(
   sajuContent: SajuFortune,
   scanResult: CalculateResult
 ): AlignmentAnalysis {
-  const matchingTraits: AlignmentAnalysis['matchingTraits'] = [];
-  let alignmentScore = 0;
-  
+  // 새 매핑 엔진으로 일치도 계산
+  const alignResult = calculateAlignment(sajuResult.일간, scanResult.scores);
+  const profile = getCheonganProfile(sajuResult.일간);
   const ohang = sajuResult.오행;
-  const ohangTraits = OHANG_TO_SCAN_TRAITS[ohang];
   const sajuOverview = sajuContent.전체개관;
-  
-  // 오행과 32 Spectrum 타입 일치도
-  if (ohangTraits && ohangTraits.typeCodes.includes(scanResult.typeCode)) {
-    alignmentScore += 30;
-    matchingTraits.push({
-      category: '기본 성향',
-      sajuTrait: `${ILGAN_SYMBOL[sajuResult.일간].name} (${ohang})`,
-      scanTrait: scanResult.typeCode,
-      description: '타고난 기질과 현재 성향이 일치합니다.'
-    });
+
+  // matchingTraits 생성
+  const matchingTraits: AlignmentAnalysis['matchingTraits'] = [];
+
+  // 1) 기본 성향 매칭
+  matchingTraits.push({
+    category: '기본 성향',
+    sajuTrait: `${profile?.name || sajuResult.일간} (${ohang})`,
+    scanTrait: scanResult.typeCode,
+    description: `타고난 기질과 현재 성향의 일치도: ${alignResult.totalScore}% (${alignResult.label})`
+  });
+
+  // 2) 일치하는 축 추가
+  for (const detail of alignResult.axisDetails) {
+    if (detail.isMatch) {
+      matchingTraits.push({
+        category: detail.axisLabel,
+        sajuTrait: detail.sajuLabel,
+        scanTrait: detail.spectrumLabel,
+        description: `${detail.axisLabel}에서 선천적 기질과 현재 성향이 일치합니다.${detail.isCoreAxis ? ' (핵심 특성)' : ''}`
+      });
+    }
   }
-  
-  // 키워드 일치도
-  const sajuKeywords = sajuOverview.keywords;
-  const scanTypeDetail = SCAN_TYPE_DETAILS[scanResult.typeCode];
-  if (scanTypeDetail) {
-    const scanText = [
-      scanTypeDetail.summary || '',
-      scanTypeDetail.strength || '',
-      scanTypeDetail.weakness || ''
-    ].join(' ');
-    
-    const commonKeywords = sajuKeywords.filter(kw => 
-      scanText.includes(kw)
+
+  // 3) 키워드 매칭
+  if (profile && sajuOverview) {
+    const sajuKeywords = sajuOverview.keywords || [];
+    const profileKeywords = profile.keywords;
+    const commonKeywords = sajuKeywords.filter(k =>
+      profileKeywords.some(pk => k.includes(pk) || pk.includes(k))
     );
-    
     if (commonKeywords.length > 0) {
-      alignmentScore += commonKeywords.length * 10;
       matchingTraits.push({
         category: '키워드',
-        sajuTrait: commonKeywords.join(', '),
+        sajuTrait: sajuKeywords.join(', '),
         scanTrait: scanResult.typeCode,
         description: `${commonKeywords.length}개의 공통 키워드가 발견되었습니다.`
       });
     }
   }
-  
-  // 강점 일치도
-  const sajuStrength = sajuOverview.strength;
-  if (scanTypeDetail && sajuStrength) {
-    const strengthMatch = checkTextMatch(sajuStrength, scanTypeDetail.summary.strength);
-    if (strengthMatch) {
-      alignmentScore += 20;
-      matchingTraits.push({
-        category: '강점',
-        sajuTrait: sajuStrength,
-        scanTrait: scanTypeDetail.summary.strength,
-        description: '강점 영역에서 일치하는 특성이 있습니다.'
-      });
-    }
-  }
-  
-  // 축별 성향 일치도
-  const axisMatches = analyzeAxisAlignment(sajuResult, scanResult);
-  alignmentScore += axisMatches.score;
-  matchingTraits.push(...axisMatches.traits);
-  
-  alignmentScore = Math.min(alignmentScore, 100);
-  
-  let summary = '';
-  if (alignmentScore >= 70) {
-    summary = '타고난 기질과 현재 성향이 높은 일치도를 보입니다. 선천적 특성이 잘 발현되고 있다는 의미입니다.';
-  } else if (alignmentScore >= 50) {
-    summary = '타고난 기질과 현재 성향이 어느 정도 일치합니다. 일부 영역에서 성장의 여지가 있습니다.';
-  } else {
-    summary = '타고난 기질과 현재 성향 사이에 차이가 있습니다. 이는 성장과 변화의 기회로 볼 수 있습니다.';
-  }
-  
+
+  // 4) 요약 생성
+  const summary = alignResult.summary;
+
   return {
     matchingTraits,
-    alignmentScore,
+    alignmentScore: alignResult.totalScore,
     summary
   };
 }
@@ -307,49 +284,49 @@ function analyzeAxisAlignment(
   sajuResult: SajuResult,
   scanResult: CalculateResult
 ): { score: number; traits: AlignmentAnalysis['matchingTraits'] } {
+  // 새 매핑 엔진이 이미 축별 분석을 하므로, 여기서는 결과만 변환
+  const alignResult = calculateAlignment(sajuResult.일간, scanResult.scores);
   const traits: AlignmentAnalysis['matchingTraits'] = [];
-  let score = 0;
-  
-  const ohang = sajuResult.오행;
-  const ohangTraits = OHANG_TO_SCAN_TRAITS[ohang];
-  
-  if (!ohangTraits) {
-    return { score: 0, traits: [] };
-  }
-  
-  // 축별 매칭
-  ohangTraits.axes.forEach(axis => {
-    const scanScore = scanResult.scores[axis] || 0;
-    const isLeft = scanScore <= 0;
-    
-    // 오행별 축 성향 예상
-    const expectedDirection = getExpectedAxisDirection(ohang, axis);
-    
-    if (expectedDirection === (isLeft ? 'left' : 'right')) {
-      score += 10;
+  let matchCount = 0;
+
+  for (const detail of alignResult.axisDetails) {
+    if (detail.isMatch) {
+      matchCount++;
       traits.push({
-        category: `${axis} 축`,
-        sajuTrait: `${ILGAN_SYMBOL[sajuResult.일간].name} 성향`,
-        scanTrait: isLeft ? '좌측 성향' : '우측 성향',
-        description: `${axis} 축에서 선천적 기질과 현재 성향이 일치합니다.`
+        category: `${detail.axisLabel} 축`,
+        sajuTrait: detail.sajuLabel,
+        scanTrait: detail.spectrumLabel,
+        description: `${detail.axisLabel}에서 선천적 기질과 현재 성향이 일치합니다.`
       });
     }
-  });
-  
-  return { score, traits };
+  }
+
+  return {
+    score: Math.round((matchCount / 5) * 30),  // 최대 30점 기여
+    traits
+  };
 }
 
-function getExpectedAxisDirection(ohang: string, axis: string): 'left' | 'right' | 'neutral' {
-  // 오행별 축 성향 매핑 (간단한 예시)
-  const mapping: Record<string, Record<string, 'left' | 'right'>> = {
-    '木': { 'PJ': 'right', 'DA': 'right' },
-    '火': { 'EI': 'right', 'PJ': 'left' },
-    '土': { 'SN': 'left', 'PJ': 'right' },
-    '金': { 'FT': 'right', 'PJ': 'right' },
-    '水': { 'SN': 'right', 'FT': 'left' }
+function getExpectedAxisDirection(
+  ohang: string,
+  axis: string
+): 'left' | 'right' | 'neutral' {
+  // 새 매핑 엔진의 프로파일 활용
+  // 오행 → 대표 천간으로 변환하여 조회
+  const ohangToCheongan: Record<string, string> = {
+    '木': '甲', '火': '丙', '土': '戊', '金': '庚', '水': '壬'
   };
-  
-  return mapping[ohang]?.[axis] || 'neutral';
+  const cheongan = ohangToCheongan[ohang];
+  if (!cheongan) return 'neutral';
+
+  const profile = getCheonganProfile(cheongan);
+  if (!profile) return 'neutral';
+
+  const axisKey = axis as 'EI' | 'SN' | 'FT' | 'PJ' | 'DA';
+  const direction = profile.expectedDirections[axisKey];
+  if (!direction) return 'neutral';
+
+  return direction === 'LEFT' ? 'left' : 'right';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -363,55 +340,66 @@ function analyzeGap(
 ): GapAnalysis {
   const differences: GapAnalysis['differences'] = [];
   const growthPoints: string[] = [];
-  
-  const sajuOverview = sajuContent.전체개관;
-  const scanTypeDetail = SCAN_TYPE_DETAILS[scanResult.typeCode];
-  
-  // 주의점 차이 분석
-  if (sajuOverview.caution && scanTypeDetail) {
-    const cautionGap = analyzeTextGap(sajuOverview.caution, scanTypeDetail.summary.weakness);
-    if (cautionGap) {
+  const alignResult = calculateAlignment(sajuResult.일간, scanResult.scores);
+  const profile = getCheonganProfile(sajuResult.일간);
+
+  // 1) 축별 갭 분석 (새 엔진 기반)
+  for (const detail of alignResult.axisDetails) {
+    if (!detail.isMatch && !detail.isGreyZone) {
       differences.push({
-        category: '주의점',
-        sajuSide: sajuOverview.caution,
-        scanSide: scanTypeDetail.summary.weakness,
-        gapDescription: cautionGap.description,
-        growthOpportunity: cautionGap.opportunity
+        category: `${detail.axisLabel} 축`,
+        sajuSide: detail.sajuLabel,
+        scanSide: detail.spectrumLabel,
+        gapDescription: `${detail.axisLabel}에서 선천적 기질과 현재 성향이 다릅니다.${detail.isCoreAxis ? ' (핵심 특성 영역)' : ''}`,
+        growthOpportunity: `양쪽 성향의 장점을 모두 활용할 수 있는 균형을 찾아보세요.`
       });
-      growthPoints.push(cautionGap.opportunity);
+      growthPoints.push(`${detail.axisLabel}의 균형 찾기`);
     }
   }
-  
-  // Grey Zone 분석
-  if (scanResult.greyZones.length > 0) {
-    differences.push({
-      category: '유연성',
-      sajuSide: '명확한 성향',
-      scanSide: `${scanResult.greyZones.length}개 축 Grey Zone`,
-      gapDescription: '사주는 명확한 성향을 보이지만, 현재는 여러 영역에서 유연한 적응력을 보입니다.',
-      growthOpportunity: 'Grey Zone의 유연성을 활용하여 다양한 상황에 적응할 수 있는 능력을 키우세요.'
-    });
-    growthPoints.push('유연한 적응력 활용');
+
+  // 2) Grey Zone 분석
+  for (const detail of alignResult.axisDetails) {
+    if (detail.isGreyZone) {
+      differences.push({
+        category: '유연성',
+        sajuSide: detail.sajuLabel,
+        scanSide: `Grey Zone (점수: ${detail.spectrumScore})`,
+        gapDescription: `${detail.axisLabel}에서 유연한 적응력을 보입니다.`,
+        growthOpportunity: `Grey Zone의 유연성을 활용하여 다양한 상황에 적응할 수 있는 능력을 키우세요.`
+      });
+    }
   }
-  
-  // 축별 차이 분석
-  const axisGaps = analyzeAxisGaps(sajuResult, scanResult);
-  differences.push(...axisGaps);
-  
-  let summary = '';
-  if (differences.length === 0) {
-    summary = '타고난 기질과 현재 성향이 매우 잘 일치합니다.';
-  } else if (differences.length <= 2) {
+
+  // 3) 주의점 차이
+  const sajuOverview = sajuContent.전체개관;
+  if (sajuOverview?.caution && profile) {
+    differences.push({
+      category: '주의점 비교',
+      sajuSide: sajuOverview.caution,
+      scanSide: `${scanResult.typeCode} 타입의 주의점`,
+      gapDescription: '선천적 주의점과 현재 성향의 주의점을 함께 인식하면 성장에 도움이 됩니다.',
+      growthOpportunity: '두 관점의 주의점을 모두 인식하고 균형을 찾아보세요.'
+    });
+  }
+
+  // 4) 요약
+  const gapCount = alignResult.gapAxes.length;
+  const greyCount = alignResult.greyZoneAxes.length;
+  let summary: string;
+
+  if (gapCount === 0) {
+    summary = '선천적 기질과 현재 성향이 매우 잘 일치합니다.';
+  } else if (gapCount <= 2) {
     summary = '일부 영역에서 차이가 있지만, 이는 자연스러운 성장 과정입니다.';
   } else {
-    summary = '여러 영역에서 차이가 발견되었습니다. 이는 성장과 변화의 기회로 활용할 수 있습니다.';
+    summary = '후천적 경험을 통해 다양한 영역에서 변화와 성장이 이루어지고 있습니다.';
   }
-  
-  return {
-    differences,
-    summary,
-    growthPoints
-  };
+
+  if (greyCount > 0) {
+    summary += ` ${greyCount}개 축에서 Grey Zone(유연 영역)이 감지되었습니다.`;
+  }
+
+  return { differences, summary, growthPoints };
 }
 
 function analyzeAxisGaps(
@@ -467,6 +455,9 @@ function generateInsights(
   const sajuOverview = sajuContent.전체개관;
   const scanTypeDetail = SCAN_TYPE_DETAILS[scanResult.typeCode];
   
+  // Grey Zone 심화 분석
+  const greyZoneAnalysis = analyzeGreyZones(sajuResult.일간, scanResult.scores);
+  
   // 통합 인생 테마
   const scanDescription = scanTypeDetail?.summary || scanTypeDetail?.title || '현재의 성향을 가진';
   const lifeTheme = `${sajuOverview.lifeTheme} 그리고 ${scanDescription} 삶`;
@@ -485,7 +476,7 @@ function generateInsights(
   if (scanTypeDetail) {
     strengths.push({
       title: '현재의 강점',
-      description: scanTypeDetail.summary.strength,
+      description: scanTypeDetail.strength,
       source: 'scan'
     });
   }
@@ -496,6 +487,15 @@ function generateInsights(
       title: '통합 강점',
       description: '선천적 기질과 현재 성향이 일치하는 영역에서 특별한 힘을 발휘합니다.',
       source: 'both'
+    });
+  }
+  
+  // Grey Zone 강점
+  if (greyZoneAnalysis.greyZoneCount > 0) {
+    strengths.push({
+      title: `유연한 적응력 (${greyZoneAnalysis.greyZoneLabel})`,
+      description: greyZoneAnalysis.overallInterpretation,
+      source: 'both' as const
     });
   }
   
@@ -511,7 +511,7 @@ function generateInsights(
   if (scanTypeDetail) {
     cautions.push({
       title: '현재의 주의점',
-      description: scanTypeDetail.summary.weakness,
+      description: scanTypeDetail.weakness,
       source: 'scan'
     });
   }
@@ -525,11 +525,21 @@ function generateInsights(
     });
   }
   
+  // Grey Zone 심화 해석
+  for (const detail of greyZoneAnalysis.details) {
+    cautions.push({
+      title: `${detail.axisLabel} 유연 영역${detail.isCoreAxis ? ' (핵심 특성)' : ''}`,
+      description: detail.interpretation,
+      source: 'both' as const
+    });
+  }
+  
   // 통합 키워드
   const keywords = [
     ...sajuOverview.keywords,
     ...(scanTypeDetail ? [scanResult.typeCode] : []),
-    ...(alignment.alignmentScore >= 70 ? ['일치', '조화'] : ['성장', '변화'])
+    ...(alignment.alignmentScore >= 70 ? ['일치', '조화'] : ['성장', '변화']),
+    ...(greyZoneAnalysis.greyZoneCount > 0 ? [greyZoneAnalysis.greyZoneLabel, '유연성'] : [])
   ];
   
   // 통합 메시지
@@ -540,6 +550,11 @@ function generateInsights(
     message = `타고난 기질과 현재 성향이 조화롭게 어우러지고 있습니다. ${gap.growthPoints[0] || '성장의 기회'}를 통해 더욱 발전할 수 있어요.`;
   } else {
     message = `타고난 기질과 현재 성향 사이의 차이는 성장의 기회입니다. ${gap.growthPoints[0] || '새로운 가능성'}을 탐색하며 균형을 찾아가세요.`;
+  }
+  
+  // Grey Zone 성장 메시지 추가
+  if (greyZoneAnalysis.greyZoneCount > 0) {
+    message += ' ' + greyZoneAnalysis.growthMessage;
   }
   
   return {
@@ -562,59 +577,52 @@ function generateCoaching(
   gap: GapAnalysis
 ): CoachingRecommendations {
   const sajuOverview = sajuContent.전체개관;
-  const scanTypeDetail = SCAN_TYPE_DETAILS[scanResult.typeCode];
-  
+
+  // 새 매핑 엔진으로 축별 코칭 생성
+  const alignResult = calculateAlignment(sajuResult.일간, scanResult.scores);
+  const axisCoaching = generateAxisCoaching(alignResult.axisDetails);
+
   // 성장 방향
   const growthDirection = {
     title: '성장 방향',
-    description: gap.summary || '선천적 기질과 현재 성향을 조화롭게 발전시켜 나가세요.',
+    description: alignResult.summary,
     actions: [
-      ...gap.growthPoints,
-      sajuOverview.lifeTheme,
-      scanTypeDetail?.summary.advice || '현재 성향을 활용한 성장'
+      ...axisCoaching.growth,
+      sajuOverview?.lifeTheme || '나만의 인생 테마를 발견하세요'
     ]
   };
-  
+
   // 관계 개선
   const relationship = {
     title: '관계 개선',
     description: '사주와 32 Spectrum을 통합한 관계 가이드',
     tips: [
-      sajuContent.애정운.tips[0] || '관계에서 균형 찾기',
-      scanTypeDetail?.summary.advice || '현재 성향을 활용한 관계',
-      '선천적 기질과 현재 성향의 조화'
+      sajuContent.애정운?.tips?.[0] || '관계에서 나만의 강점을 활용하세요',
+      ...axisCoaching.relationship
     ]
   };
-  
+
   // 커리어
   const career = {
     title: '커리어',
     description: '통합 분석 기반 커리어 추천',
     recommendations: [
-      sajuContent.직업운.tips[0] || '전문성 강화',
-      scanTypeDetail?.summary.advice || '현재 성향 활용',
-      '선천적 기질과 현재 성향의 시너지'
+      sajuContent.직업운?.tips?.[0] || '나의 강점을 살리는 일을 찾으세요',
+      ...axisCoaching.career
     ]
   };
-  
+
   // 자기계발
   const selfDevelopment = {
     title: '자기계발',
     description: '통합 성장 가이드',
     practices: [
-      sajuOverview.strength + ' 활용하기',
-      gap.growthPoints[0] || '성장 포인트 개발',
-      '일치하는 영역 강화',
-      '차이점 균형 맞추기'
+      (sajuOverview?.strength || '선천적 강점') + '을 일상에서 활용하기',
+      ...axisCoaching.selfDev
     ]
   };
-  
-  return {
-    growthDirection,
-    relationship,
-    career,
-    selfDevelopment
-  };
+
+  return { growthDirection, relationship, career, selfDevelopment };
 }
 
 // ══════════════════════════════════════════════════════════════

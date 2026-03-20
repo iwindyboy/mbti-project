@@ -38,24 +38,35 @@ export const QuestionPage: React.FC = () => {
         }));
 
         const result = calculateScanResult(calculateAnswers, allQuestions);
+        console.log('QuestionPage - 계산된 결과:', result);
 
         if (!result || !result.typeCode) {
           console.error('Invalid result generated', result);
+          alert('결과 생성에 실패했습니다. 다시 시도해주세요.');
           return;
         }
 
         // 결과 데이터를 저장 (React Native 호환을 위해)
         if (typeof window !== 'undefined' && window.sessionStorage) {
           sessionStorage.setItem('scanResult', JSON.stringify(result));
+          console.log('QuestionPage - sessionStorage에 저장 완료');
         }
         
         // localStorage에 결과 저장 (영구 저장)
         try {
-          const resultCard = createResultCard(result);
-          await saveScanResult(result, resultCard.typeCode, 'basic');
-          console.log('32 Spectrum 결과 저장 완료:', resultCard.typeCode);
+          await saveScanResult(result, result.typeCode, 'basic');
+          console.log('QuestionPage - localStorage에 저장 완료:', {
+            typeCode: result.typeCode,
+            scores: result.scores,
+            greyZones: result.greyZones
+          });
+          
+          // 저장 확인
+          const { getLatestScanResult } = require('../utils/storage');
+          const savedResult = await getLatestScanResult();
+          console.log('QuestionPage - 저장 확인:', savedResult);
         } catch (error) {
-          console.error('32 Spectrum 결과 저장 실패:', error);
+          console.error('QuestionPage - 결과 저장 실패:', error);
           // 저장 실패해도 계속 진행
         }
         
@@ -65,8 +76,8 @@ export const QuestionPage: React.FC = () => {
           const { sendSurveyComplete } = require('../utils/bridge');
           sendSurveyComplete(result);
         } else {
-          // 일반 웹 환경: 결과 페이지로 이동
-          navigate('/result');
+          // 일반 웹 환경: 32 Spectrum 결과 페이지로 이동
+          navigate('/scan-result');
         }
       } catch (error) {
         console.error('Error calculating result', error);

@@ -15,14 +15,35 @@ export const ScanResultPage: React.FC = () => {
 
   const loadResult = async () => {
     try {
+      // 1. localStorage에서 최신 결과 가져오기
       const scanResultData = await getLatestScanResult();
+      console.log('ScanResultPage - localStorage 결과:', scanResultData);
       
-      if (!scanResultData || !scanResultData.result) {
+      // 2. sessionStorage에서도 확인 (React Native 호환)
+      let sessionResult: CalculateResult | null = null;
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const sessionData = window.sessionStorage.getItem('scanResult');
+        if (sessionData) {
+          try {
+            sessionResult = JSON.parse(sessionData) as CalculateResult;
+            console.log('ScanResultPage - sessionStorage 결과:', sessionResult);
+          } catch (e) {
+            console.error('ScanResultPage - sessionStorage 파싱 오류:', e);
+          }
+        }
+      }
+      
+      // 3. 우선순위: localStorage > sessionStorage
+      const finalResult = scanResultData?.result || sessionResult;
+      
+      if (!finalResult) {
+        console.warn('ScanResultPage - 결과를 찾을 수 없습니다');
         setLoading(false);
         return;
       }
 
-      setResult(scanResultData.result as CalculateResult);
+      console.log('ScanResultPage - 최종 결과:', finalResult);
+      setResult(finalResult as CalculateResult);
     } catch (error) {
       console.error('32 Spectrum 결과 불러오기 오류:', error);
     } finally {

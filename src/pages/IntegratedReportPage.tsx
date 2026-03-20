@@ -4,50 +4,116 @@ import { IntegratedReport, generateIntegratedReport } from '../utils/integratedR
 import { SajuResult } from '../utils/sajuEngine';
 import { CalculateResult } from '../utils/calculate';
 import { ILGAN_SYMBOL, getSajuContent } from '../data/sajuDb';
-import type { SajuFortune } from '../data/sajuDb';
-import { getTypeName } from '../utils/typeNames';
+import { getLatestScanResult } from '../utils/storage';
+import { IntegratedShareCard } from '../components/IntegratedShareCard';
+import { calculateAlignment } from '../utils/saju/alignmentMapper';
 
 export const IntegratedReportPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [report, setReport] = useState<IntegratedReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showShareCard, setShowShareCard] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // location.state에서 데이터 가져오기
-    const { sajuResult, scanResult, name } = location.state || {};
-    
-    if (!sajuResult || !scanResult || !name) {
-      // 데이터가 없으면 홈으로 리다이렉트
-      navigate('/');
-      return;
-    }
+    const loadIntegratedReport = async () => {
+      try {
+        // 1. location.state에서 데이터 가져오기 (우선순위 1)
+        let sajuResult: SajuResult | null = null;
+        let scanResult: CalculateResult | null = null;
+        let name = '';
 
-    try {
-      // 사주 콘텐츠 가져오기
-      const sajuContent = getSajuContent(sajuResult.일간);
-      if (!sajuContent) {
-        throw new Error('사주 콘텐츠를 불러올 수 없습니다.');
+        const stateData = location.state || {};
+        if (stateData.sajuResult && stateData.scanResult && stateData.name) {
+          sajuResult = stateData.sajuResult;
+          scanResult = stateData.scanResult;
+          name = stateData.name;
+          console.log('IntegratedReportPage - location.state에서 데이터 로드');
+        } else {
+          // 2. localStorage에서 저장된 결과 가져오기 (우선순위 2)
+          console.log('IntegratedReportPage - localStorage에서 데이터 로드 시도');
+          
+          // 사주 결과 가져오기
+          const sajuResultData = localStorage.getItem('saju_result');
+          if (sajuResultData) {
+            try {
+              const parsed = JSON.parse(sajuResultData);
+              if (parsed.result) {
+                sajuResult = parsed.result;
+                name = parsed.name || '사용자';
+                console.log('IntegratedReportPage - 사주 결과 로드 완료:', sajuResult);
+              }
+            } catch (e) {
+              console.error('IntegratedReportPage - 사주 결과 파싱 오류:', e);
+            }
+          }
+
+          // 32 Spectrum 결과 가져오기
+          const scanResultData = await getLatestScanResult();
+          if (scanResultData && scanResultData.result) {
+            scanResult = scanResultData.result as CalculateResult;
+            console.log('IntegratedReportPage - 32 Spectrum 결과 로드 완료:', scanResult);
+          }
+
+          // sessionStorage에서도 확인
+          if (!scanResult && typeof window !== 'undefined' && window.sessionStorage) {
+            const sessionData = window.sessionStorage.getItem('scanResult');
+            if (sessionData) {
+              try {
+                scanResult = JSON.parse(sessionData) as CalculateResult;
+                console.log('IntegratedReportPage - sessionStorage에서 32 Spectrum 결과 로드');
+              } catch (e) {
+                console.error('IntegratedReportPage - sessionStorage 파싱 오류:', e);
+              }
+            }
+          }
+        }
+
+        // 데이터 검증
+        if (!sajuResult || !scanResult) {
+          console.warn('IntegratedReportPage - 필요한 데이터가 없습니다:', {
+            hasSaju: !!sajuResult,
+            hasScan: !!scanResult
+          });
+          alert('통합 리포트를 생성하려면 사주 검사와 32 Spectrum 검사를 모두 완료해야 합니다.');
+          navigate('/landing');
+          return;
+        }
+
+        // 사주 콘텐츠 가져오기
+        const sajuContent = getSajuContent(sajuResult.일간);
+        if (!sajuContent) {
+          throw new Error('사주 콘텐츠를 불러올 수 없습니다.');
+        }
+
+        // 통합 리포트 생성
+        console.log('IntegratedReportPage - 통합 리포트 생성 시작:', {
+          name,
+          일간: sajuResult.일간,
+          typeCode: scanResult.typeCode
+        });
+        
+        const integratedReport = generateIntegratedReport(
+          name,
+          sajuResult,
+          sajuContent,
+          scanResult
+        );
+
+        console.log('IntegratedReportPage - 통합 리포트 생성 완료:', integratedReport);
+        setReport(integratedReport);
+        setLoading(false);
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      } catch (error) {
+        console.error('IntegratedReportPage - 통합 리포트 생성 오류:', error);
+        alert('통합 리포트를 생성하는 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : String(error)));
+        navigate('/landing');
       }
+    };
 
-      // 통합 리포트 생성
-      const integratedReport = generateIntegratedReport(
-        name,
-        sajuResult,
-        sajuContent,
-        scanResult
-      );
-
-      setReport(integratedReport);
-      setLoading(false);
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    } catch (error) {
-      console.error('통합 리포트 생성 오류:', error);
-      alert('통합 리포트를 생성하는 중 오류가 발생했습니다.');
-      navigate('/');
-    }
+    loadIntegratedReport();
   }, [location, navigate]);
 
   // 스크롤 진행률 바
@@ -373,14 +439,46 @@ export const IntegratedReportPage: React.FC = () => {
         </button>
         <button 
           style={styles.shareButton}
-          onClick={() => {
-            // 공유 기능 (추후 구현)
-            alert('공유 기능은 준비 중입니다.');
-          }}
+          onClick={() => setShowShareCard(true)}
         >
           📋 결과 공유하기
         </button>
       </div>
+      {showShareCard && report && (
+        <IntegratedShareCard
+          name={report.name}
+          cheongan={report.saju.result.일간}
+          cheonganName={(() => {
+            const names: Record<string, string> = {
+              '甲': '갑목', '乙': '을목', '丙': '병화', '丁': '정화', '戊': '무토',
+              '己': '기토', '庚': '경금', '辛': '신금', '壬': '임수', '癸': '계수',
+            };
+            return names[report.saju.result.일간] || report.saju.result.일간;
+          })()}
+          spectrumCode={report.scan.result.typeCode}
+          alignmentScore={report.analysis.alignment.alignmentScore}
+          alignmentLabel={(() => {
+            const s = report.analysis.alignment.alignmentScore;
+            if (s >= 85) return '깊은 일치형';
+            if (s >= 65) return '자연스러운 조화형';
+            if (s >= 45) return '보완형';
+            return '전환형';
+          })()}
+          alignmentEmoji={(() => {
+            const s = report.analysis.alignment.alignmentScore;
+            if (s >= 85) return '🟢';
+            if (s >= 65) return '🔵';
+            if (s >= 45) return '🟡';
+            return '🟠';
+          })()}
+          matchedAxes={(() => {
+            const result = calculateAlignment(report.saju.result.일간, report.scan.result.scores);
+            return result.matchedAxes;
+          })()}
+          greyZoneCount={report.scan.result.greyZones?.length || 0}
+          onClose={() => setShowShareCard(false)}
+        />
+      )}
     </div>
   );
 };

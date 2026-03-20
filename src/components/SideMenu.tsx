@@ -24,7 +24,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { id: 'main', label: '홈', icon: '🏠', path: '/landing' },
-  { id: 'intro', label: 'SCAN 소개', icon: '■', path: '/intro' },
+  { id: 'intro', label: 'SCAN ME 소개', icon: '■', path: '/intro' },
   {
     id: 'tests',
     label: '성향 검사 하기',
@@ -304,7 +304,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   menuItemActive: {
     backgroundColor: 'rgba(255, 182, 193, 0.15)',
-    borderLeftColor: '#FFB6C1',
+    borderLeft: '4px solid #FFB6C1',
     fontWeight: '600',
   },
   menuIcon: {
@@ -354,7 +354,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   subMenuItemActive: {
     backgroundColor: 'rgba(255, 182, 193, 0.1)',
-    borderLeftColor: '#FFB6C1',
+    borderLeft: '2px solid #FFB6C1',
     fontWeight: '500',
   },
   subMenuPrefix: {

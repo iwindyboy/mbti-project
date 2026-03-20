@@ -26,7 +26,6 @@ import { IntegratedResultPage } from './pages/IntegratedResultPage';
 import { IntegratedReportPage } from './pages/IntegratedReportPage';
 import { SpectrumIntroPage } from './pages/SpectrumIntroPage';
 import { SajuIntroPage } from './pages/SajuIntroPage';
-import { IntegratedResultCardPage } from './pages/IntegratedResultCardPage';
 import { SideMenu } from './components/SideMenu';
 import { HamburgerMenu } from './components/HamburgerMenu';
 
@@ -76,7 +75,7 @@ function App() {
         <Route path="/scan-result" element={<ScanResultPage />} />
         <Route path="/integrated-result" element={<IntegratedResultPage />} />
         <Route path="/integrated-report" element={<IntegratedReportPage />} />
-        <Route path="/integrated-result-card" element={<IntegratedResultCardPage />} />
+        <Route path="/integrated-result-card" element={<Navigate to="/integrated-report" replace />} />
         <Route path="*" element={<Navigate to="/landing" replace />} />
       </Routes>
     </BrowserRouter>

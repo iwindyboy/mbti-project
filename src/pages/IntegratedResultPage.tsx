@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getIntegratedResult } from '../utils/storage';
+import { getIntegratedResult, getLatestScanResult } from '../utils/storage';
 
 export const IntegratedResultPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,14 +25,44 @@ export const IntegratedResultPage: React.FC = () => {
 
       // 통합 분석 결과가 없으면 사주와 SCAN 결과 확인
       const sajuResult = localStorage.getItem('saju_result');
-      const scanResult = localStorage.getItem('SCAN_RESULT');
+      
+      // 32 Spectrum 결과는 storage 유틸리티를 통해 확인
+      let hasScanResult = false;
+      let scanResultData = null;
+      try {
+        scanResultData = await getLatestScanResult();
+        hasScanResult = !!scanResultData?.result;
+      } catch (e) {
+        console.error('32 Spectrum 결과 확인 오류:', e);
+      }
+      
+      // sessionStorage에서도 확인
+      if (!hasScanResult && typeof window !== 'undefined' && window.sessionStorage) {
+        const sessionData = window.sessionStorage.getItem('scanResult');
+        hasScanResult = !!sessionData;
+        if (sessionData) {
+          try {
+            scanResultData = { result: JSON.parse(sessionData) };
+          } catch (e) {
+            console.error('sessionStorage 파싱 오류:', e);
+          }
+        }
+      }
+      
+      // 사주와 32 Spectrum 결과가 모두 있으면 통합 리포트로 자동 이동
+      if (sajuResult && hasScanResult) {
+        console.log('IntegratedResultPage - 두 결과 모두 있음, 통합 리포트로 이동');
+        navigate('/integrated-report');
+        return;
+      }
       
       setMissingTests({
         saju: !sajuResult,
-        scan: !scanResult
+        scan: !hasScanResult
       });
     } catch (error) {
       console.error('통합 분석 결과 불러오기 오류:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -102,11 +132,11 @@ export const IntegratedResultPage: React.FC = () => {
           {!missingTests.saju && !missingTests.scan && (
             <div style={styles.infoBox}>
               <p style={styles.infoText}>
-                통합 분석을 진행하려면 사주 결과 페이지에서 통합 분석 버튼을 클릭하세요.
+                통합 분석 리포트를 생성할 수 있습니다.
               </p>
               <button
                 style={styles.testButton}
-                onClick={() => navigate('/fortune-report')}
+                onClick={() => navigate('/integrated-report')}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 16px rgba(139, 58, 139, 0.4)';
@@ -116,8 +146,8 @@ export const IntegratedResultPage: React.FC = () => {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 58, 139, 0.3)';
                 }}
               >
-                <span style={styles.buttonIcon}>📋</span>
-                <span style={styles.buttonText}>사주 결과 페이지로 이동</span>
+                <span style={styles.buttonIcon}>🔮</span>
+                <span style={styles.buttonText}>통합 분석 리포트 보기</span>
                 <span style={styles.buttonArrow}>→</span>
               </button>
             </div>

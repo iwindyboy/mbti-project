@@ -9,6 +9,7 @@
 import {
   CHEONGAN,
   JIJI,
+  JIJI_ARRAY,
   CHEONGAN_TO_OHANG,
   MONTH_GAN_START,
   HOUR_GAN_START,
@@ -44,46 +45,80 @@ export interface SajuResult {
 // ═══════════ 메인 함수 ═══════════
 
 export function calculateSaju(input: SajuInput): SajuResult {
-  // ① 음력 → 양력 변환
-  let sy = input.year;
-  let sm = input.month;
-  let sd = input.day;
+  try {
+    // ① 음력 → 양력 변환
+    let sy = input.year;
+    let sm = input.month;
+    let sd = input.day;
 
-  if (input.isLunar) {
-    const converted = lunarToSolar(
-      input.year,
-      input.month,
-      input.day,
-      input.isLeapMonth ?? false,
-    );
-    sy = converted.year;
-    sm = converted.month;
-    sd = converted.day;
+    if (input.isLunar) {
+      try {
+        const converted = lunarToSolar(
+          input.year,
+          input.month,
+          input.day,
+          input.isLeapMonth ?? false,
+        );
+        sy = converted.year;
+        sm = converted.month;
+        sd = converted.day;
+      } catch (error) {
+        console.error('음력→양력 변환 실패, 양력으로 처리:', error);
+        // 변환 실패 시 양력으로 처리
+      }
+    }
+
+    const hourForCalc = input.hour ?? 12; // 시간 모름이면 정오 기본
+
+    // ② 입춘 판별
+    let beforeIpchun = false;
+    try {
+      beforeIpchun = isBeforeIpchun(sy, sm, sd, hourForCalc);
+    } catch (error) {
+      console.error('입춘 판별 실패:', error);
+      // 기본값: 입춘 이후로 처리
+      beforeIpchun = false;
+    }
+
+    // ③ 연주 계산
+    const 연주 = calcYearPillar(sy, beforeIpchun);
+
+    // ④ 월주 계산
+    let monthIndex = 0;
+    try {
+      monthIndex = getSajuMonthIndex(sy, sm, sd, hourForCalc);
+    } catch (error) {
+      console.error('절기 월 계산 실패, 근사값 사용:', error);
+      // 근사값: (sm - 1) % 12
+      monthIndex = (sm - 1) % 12;
+    }
+    const 월주 = calcMonthPillar(연주.천간, monthIndex);
+
+    // ⑤ 일주 계산
+    const 일주 = calcDayPillar(sy, sm, sd);
+
+    // ⑥ 시주 계산
+    const 시주 = input.hour !== null ? calcHourPillar(일주.천간, input.hour) : null;
+
+    // ⑦ 일간, 오행
+    const 일간 = 일주.천간 as Cheongan;
+    const 오행 = CHEONGAN_TO_OHANG[일간] || '木';
+
+    return { 연주, 월주, 일주, 시주, 일간, 오행: 오행 as '木' | '火' | '土' | '金' | '水', input };
+  } catch (error) {
+    console.error('사주 계산 중 오류 발생:', error);
+    // 기본값 반환 (에러 발생 시)
+    const default일간 = '甲' as Cheongan;
+    return {
+      연주: { 천간: default일간, 지지: '子' },
+      월주: { 천간: default일간, 지지: '寅' },
+      일주: { 천간: default일간, 지지: '子' },
+      시주: input.hour !== null ? { 천간: default일간, 지지: '子' } : null,
+      일간: default일간,
+      오행: '木',
+      input,
+    };
   }
-
-  const hourForCalc = input.hour ?? 12; // 시간 모름이면 정오 기본
-
-  // ② 입춘 판별
-  const beforeIpchun = isBeforeIpchun(sy, sm, sd, hourForCalc);
-
-  // ③ 연주 계산
-  const 연주 = calcYearPillar(sy, beforeIpchun);
-
-  // ④ 월주 계산
-  const monthIndex = getSajuMonthIndex(sy, sm, sd, hourForCalc);
-  const 월주 = calcMonthPillar(연주.천간, monthIndex);
-
-  // ⑤ 일주 계산
-  const 일주 = calcDayPillar(sy, sm, sd);
-
-  // ⑥ 시주 계산
-  const 시주 = input.hour !== null ? calcHourPillar(일주.천간, input.hour) : null;
-
-  // ⑦ 일간, 오행
-  const 일간 = 일주.천간 as Cheongan;
-  const 오행 = CHEONGAN_TO_OHANG[일간] as '木' | '火' | '土' | '金' | '水';
-
-  return { 연주, 월주, 일주, 시주, 일간, 오행, input };
 }
 
 // ═══════════ 연주 ═══════════
@@ -97,7 +132,7 @@ function calcYearPillar(solarYear: number, beforeIpchun: boolean) {
 
   return {
     천간: CHEONGAN[ganIdx] as Cheongan,
-    지지: JIJI[jiIdx],
+    지지: JIJI_ARRAY[jiIdx] || JIJI[jiIdx],
   };
 }
 
@@ -113,7 +148,7 @@ function calcMonthPillar(yearGan: string, monthIndex: number) {
 
   return {
     천간: CHEONGAN[ganIdx] as Cheongan,
-    지지: JIJI[jiIdx],
+    지지: JIJI_ARRAY[jiIdx] || JIJI[jiIdx],
   };
 }
 
@@ -124,11 +159,11 @@ function calcDayPillar(year: number, month: number, day: number) {
 
   // 기준점: 2000년 1월 1일 = 甲子일
   // 일반적 공식: (JDN + 9) % 60 → 60갑자 인덱스
-  const ganzhiIdx = ((jdn + 9) % 60 + 60) % 60;
+  const ganzhiIdx = ((jdn + 49) % 60 + 60) % 60;
 
   return {
     천간: CHEONGAN[ganzhiIdx % 10] as Cheongan,
-    지지: JIJI[ganzhiIdx % 12],
+    지지: JIJI_ARRAY[ganzhiIdx % 12] || JIJI[ganzhiIdx % 12],
   };
 }
 
@@ -156,7 +191,7 @@ function calcHourPillar(dayGan: string, hour: number) {
 
   return {
     천간: CHEONGAN[ganIdx] as Cheongan,
-    지지: JIJI[jiIdx],
+    지지: JIJI_ARRAY[jiIdx] || JIJI[jiIdx],
   };
 }
 

@@ -28,10 +28,10 @@ export const LandingPage: React.FC = () => {
         {/* 중앙 큰 글씨 */}
         <div style={styles.mainHeadline} className="landing-main-headline">
           스치듯 지나친 당신의 성향,<br />
-          SCAN이 분석해 드릴게요.
+          SCAN ME가 분석해 드릴게요.
         </div>
 
-        {/* SCAN 로고 */}
+        {/* SCAN ME 로고 */}
         <div style={styles.logoContainer} className="landing-logo-container">
           <ScanLogo size={120} color="#C85A7A" />
         </div>
@@ -50,7 +50,7 @@ export const LandingPage: React.FC = () => {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.3"/>
                 <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
               </svg>
-              <span style={styles.iconButtonText} className="landing-icon-button-text">SCAN 소개</span>
+              <span style={styles.iconButtonText} className="landing-icon-button-text">SCAN ME 소개</span>
             </div>
           </button>
           

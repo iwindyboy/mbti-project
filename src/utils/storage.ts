@@ -3,6 +3,8 @@
  * React Native와 웹 환경 모두 지원
  */
 
+import { getOrCreateUserId } from './uuid';
+
 // React Native AsyncStorage 타입 정의
 interface AsyncStorage {
   getItem(key: string): Promise<string | null>;
@@ -65,9 +67,14 @@ let storage: AsyncStorage;
 if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
   // React Native WebView 환경
   try {
-    // @ts-ignore - React Native AsyncStorage는 동적으로 로드될 수 있음
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    storage = AsyncStorage;
+    // React Native 환경에서만 require 사용 (브라우저에서는 실행되지 않음)
+    if (typeof require !== 'undefined') {
+      // @ts-ignore - React Native AsyncStorage는 동적으로 로드될 수 있음
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      storage = AsyncStorage;
+    } else {
+      storage = new WebStorage();
+    }
   } catch (error) {
     // AsyncStorage가 없으면 웹 스토리지 사용
     storage = new WebStorage();
@@ -104,7 +111,6 @@ const SCAN_RESULT_KEY = 'SCAN_RESULT';
 export const saveScanResult = async (result: any, typeCode: string, testType: TestType = 'basic'): Promise<void> => {
   try {
     // 새 결과 생성
-    const { getOrCreateUserId } = require('./uuid');
     const userId = getOrCreateUserId();
     const newResult: ScanResultData = {
       id: `result-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -223,7 +229,6 @@ export const saveIntegratedResult = async (
   analysis: any
 ): Promise<void> => {
   try {
-    const { getOrCreateUserId } = require('./uuid');
     const userId = getOrCreateUserId();
     
     const newResult: IntegratedResultData = {

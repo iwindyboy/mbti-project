@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { calculateSaju, SajuInput, SajuResult } from '../utils/sajuEngine';
 import { SAJU_CONTENT_DB, ILGAN_SYMBOL, FortuneType } from '../data/sajuDb';
+import { getLatestScanResult } from '../utils/storage';
 
 // 일간별 32 스펙트럼 매핑 데이터
 const ILGAN_SPECTRUM_MAP: Record<string, { types: string[]; reason: string }> = {
@@ -543,6 +544,55 @@ export const FortuneResultPage: React.FC = () => {
                 32 스펙트럼 검사하기 →
               </button>
             </div>
+
+            {/* 통합 리포트 CTA 섹션 */}
+            <div style={styles.integratedCTASection}>
+              <h3 style={styles.integratedCTATitle}>🔮 통합 분석 리포트</h3>
+              <p style={styles.integratedCTAText}>
+                사주와 32 스펙트럼을 함께 분석하면<br />
+                더 깊이 있는 인사이트를 얻을 수 있어요.
+              </p>
+              <button
+                style={styles.integratedCTAButton}
+                onClick={async () => {
+                  try {
+                    // 32 Spectrum 결과 확인
+                    const scanResultData = await getLatestScanResult();
+                    
+                    // sessionStorage에서도 확인
+                    let scanResult = scanResultData?.result;
+                    if (!scanResult && typeof window !== 'undefined' && window.sessionStorage) {
+                      const sessionData = window.sessionStorage.getItem('scanResult');
+                      if (sessionData) {
+                        scanResult = JSON.parse(sessionData);
+                      }
+                    }
+
+                    if (!scanResult) {
+                      alert('32 Spectrum 검사를 먼저 완료해주세요.');
+                      navigate('/spectrum-intro');
+                      return;
+                    }
+
+                    // 통합 리포트 페이지로 이동 (데이터는 IntegratedReportPage에서 로드)
+                    navigate('/integrated-report');
+                  } catch (error) {
+                    console.error('통합 리포트 이동 오류:', error);
+                    alert('통합 리포트를 불러오는 중 오류가 발생했습니다.');
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 58, 139, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 58, 139, 0.3)';
+                }}
+              >
+                통합 리포트 보기 →
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1056,6 +1106,44 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '100%',
     height: '52px',
     background: 'linear-gradient(135deg, #8B3A8B 0%, #1A0A2E 100%)',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '16px',
+    fontSize: '16px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    boxShadow: '0 4px 12px rgba(139, 58, 139, 0.3)',
+  },
+  // 통합 리포트 CTA 섹션
+  integratedCTASection: {
+    marginTop: '24px',
+    paddingTop: '24px',
+    borderTop: '2px dashed #E8D5F0',
+    textAlign: 'center',
+    backgroundColor: '#F5F0FF',
+    borderRadius: '16px',
+    padding: '24px',
+  },
+  integratedCTATitle: {
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#2D1B40',
+    marginBottom: '16px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+  },
+  integratedCTAText: {
+    fontSize: '15px',
+    color: '#5A4A42',
+    lineHeight: '1.8',
+    marginBottom: '20px',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+  },
+  integratedCTAButton: {
+    width: '100%',
+    height: '52px',
+    background: 'linear-gradient(135deg, #8B3A8B 0%, #C8956C 100%)',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '16px',

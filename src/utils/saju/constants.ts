@@ -8,6 +8,7 @@ export type CheonganType = typeof CHEONGAN[number];
 
 // 12지지
 export const JIJI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'] as const;
+export const JIJI_ARRAY: readonly string[] = JIJI;
 
 // 천간 → 오행
 export const CHEONGAN_TO_OHANG: Record<string, '木'|'火'|'土'|'金'|'水'> = {

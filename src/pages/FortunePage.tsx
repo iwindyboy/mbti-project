@@ -39,7 +39,22 @@ export const FortunePage: React.FC = () => {
   const years = Array.from({ length: 121 }, (_, i) => 1930 + i);
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  
+  // 12지신 시간 옵션
+  const hourOptions = [
+    { value: 23, label: '자시 (子) 23:00 ~ 00:59' },
+    { value: 1, label: '축시 (丑) 01:00 ~ 02:59' },
+    { value: 3, label: '인시 (寅) 03:00 ~ 04:59' },
+    { value: 5, label: '묘시 (卯) 05:00 ~ 06:59' },
+    { value: 7, label: '진시 (辰) 07:00 ~ 08:59' },
+    { value: 9, label: '사시 (巳) 09:00 ~ 10:59' },
+    { value: 11, label: '오시 (午) 11:00 ~ 12:59' },
+    { value: 13, label: '미시 (未) 13:00 ~ 14:59' },
+    { value: 15, label: '신시 (申) 15:00 ~ 16:59' },
+    { value: 17, label: '유시 (酉) 17:00 ~ 18:59' },
+    { value: 19, label: '술시 (戌) 19:00 ~ 20:59' },
+    { value: 21, label: '해시 (亥) 21:00 ~ 22:59' },
+  ];
 
   // 모바일 반응형 스타일 주입
   useEffect(() => {
@@ -190,10 +205,10 @@ export const FortunePage: React.FC = () => {
               style={styles.select}
               className="fortune-select"
             >
-              <option value="">모름</option>
-              {hours.map((h) => (
-                <option key={h} value={h}>
-                  {h}시~{h + 1}시
+              <option value="">모름 (시주 제외)</option>
+              {hourOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
