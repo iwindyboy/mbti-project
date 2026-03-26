@@ -468,6 +468,7 @@ export const IntegratedReportPage: React.FC = () => {
             };
             return names[report.saju.result.일간] || report.saju.result.일간;
           })()}
+          metaphor={sajuSymbol.symbol}
           spectrumCode={report.scan.result.typeCode}
           alignmentScore={report.analysis.alignment.alignmentScore}
           alignmentLabel={(() => {

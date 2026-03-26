@@ -5,6 +5,7 @@ interface IntegratedShareCardProps {
   name: string;
   cheongan: string;
   cheonganName: string;
+  metaphor?: string;
   ohang: string;
   spectrumCode: string;
   alignmentScore: number;
@@ -89,6 +90,7 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
   name,
   cheongan,
   cheonganName,
+  metaphor,
   ohang,
   spectrumCode,
   alignmentScore,
@@ -113,7 +115,9 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
   const spectrumTraits = getTraitDescription(spectrumCode);
   const differences = findDifferences(expectedCode, spectrumCode);
 
-  const shareText = `✨ ${name}님의 SCAN ME 결과\n\n🌙 선천: ${cheonganName}(${cheongan})\n⚡ 후천: ${spectrumCode}\n📊 일치도: ${alignmentScore}% ${alignmentEmoji} ${alignmentLabel}\n${
+  const shareText = `✨ ${name}님의 SCAN ME 결과\n\n🌙 선천: ${cheonganName}(${cheongan})${metaphor ? ` — ${metaphor}` : ''}\n⚡ 후천: ${spectrumCode}\n📊 일치도: ${alignmentScore}% ${alignmentEmoji} ${alignmentLabel}\n${
+    lifeTheme ? `\n🌟 인생 테마: ${lifeTheme}\n` : ''
+  }${
     differences.length > 0
       ? `\n🔄 후천적으로 발달한 성향:\n${differences.map((d) => `  · ${d}`).join('\n')}`
       : ''
@@ -238,6 +242,13 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
                 <span style={brandSub}>선천 × 후천 성향분석</span>
               </div>
 
+              {/* 천간 메타포 */}
+              {metaphor && (
+                <div style={metaphorArea}>
+                  {cheonganName} — {metaphor}
+                </div>
+              )}
+
               {/* 이름 */}
               <div style={nameArea}>{name}님의 성향 리포트</div>
 
@@ -286,6 +297,14 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
                   <div style={{ ...barFill, width: `${alignmentScore}%` }} />
                 </div>
               </div>
+
+              {/* 인생 테마 */}
+              {lifeTheme && (
+                <div style={themeArea}>
+                  <div style={themeLabel}>✨ 나의 인생 테마</div>
+                  <div style={themeText}>{lifeTheme}</div>
+                </div>
+              )}
 
               {/* 변화 포인트 */}
               {differences.length > 0 && (
@@ -668,6 +687,40 @@ const footerArea: React.CSSProperties = {
   fontSize: '10px',
   opacity: 0.4,
   letterSpacing: '1.5px',
+};
+
+const metaphorArea: React.CSSProperties = {
+  fontSize: '13px',
+  fontWeight: 700,
+  opacity: 0.9,
+  backgroundColor: 'rgba(255,255,255,0.15)',
+  padding: '6px 16px',
+  borderRadius: '20px',
+  letterSpacing: '0.5px',
+  backdropFilter: 'blur(4px)',
+};
+
+const themeArea: React.CSSProperties = {
+  backgroundColor: 'rgba(255,255,255,0.12)',
+  borderRadius: '10px',
+  padding: '10px 14px',
+  width: '100%',
+  boxSizing: 'border-box',
+  textAlign: 'center',
+};
+
+const themeLabel: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  marginBottom: '4px',
+  opacity: 0.85,
+};
+
+const themeText: React.CSSProperties = {
+  fontSize: '11px',
+  lineHeight: 1.6,
+  opacity: 0.9,
+  wordBreak: 'keep-all',
 };
 
 // ═══ 공통 스타일 ═══

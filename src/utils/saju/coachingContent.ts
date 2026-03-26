@@ -255,14 +255,14 @@ const CHEONGAN_PERSONA: Record<string, CheonganPersona> = {
     }
   },
 
-  // ── 庚 경금: 강철 ──
+  // ── 庚 경금: 명검 ──
   '庚': {
     name: '경금',
-    metaphor: '강철',
-    coreDrive: '정의를 실현하고 결단으로 변화를 이끄는 것',
-    relStyle: '직설적이지만 뒤끝 없는 통쾌한 사람',
-    careerDNA: '결단력과 추진력으로 조직을 변화시키는 실행형 리더',
-    growthKey: '강철도 불에 달구면 원하는 모양이 돼요',
+    metaphor: '명검',
+    coreDrive: '정의를 실현하고 결단으로 중요한 것을 지키는 것',
+    relStyle: '직설적이지만 뒤끝 없는 통쾌한 사람, 지키는 사랑을 하는 보호자',
+    careerDNA: '위기 상황에서 결단으로 방향을 잡는 실행형 리더',
+    growthKey: '명검도 칼집에 넣어야 오래 가요 — 쉬는 것은 다음을 위한 전략이에요',
     axisNarrative: {
       EI: {
         natural: '결단이 필요한 순간 자연스럽게 앞으로 나서요',
