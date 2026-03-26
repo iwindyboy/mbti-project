@@ -115,7 +115,7 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
   const spectrumTraits = getTraitDescription(spectrumCode);
   const differences = findDifferences(expectedCode, spectrumCode);
 
-  const shareText = `✨ ${name}님의 SCAN ME 결과\n\n🌙 선천: ${cheonganName}(${cheongan})${metaphor ? ` — ${metaphor}` : ''}\n⚡ 후천: ${spectrumCode}\n📊 일치도: ${alignmentScore}% ${alignmentEmoji} ${alignmentLabel}\n${
+  const shareText = `✨ ${name}님의 SCAN ME 결과\n\n🌙 선천: ${cheonganName}(${cheongan}) · ${expectedCode}${metaphor ? ` — ${metaphor}` : ''}\n⚡ 후천: ${spectrumCode}\n📊 일치도: ${alignmentScore}% ${alignmentEmoji} ${alignmentLabel}\n${
     lifeTheme ? `\n🌟 인생 테마: ${lifeTheme}\n` : ''
   }${
     differences.length > 0
@@ -362,45 +362,68 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
             <div style={channelGrid}>
               {/* 카카오톡 */}
               <button onClick={handleKakao} style={channelBtn}>
-                <div style={{ ...channelIcon, backgroundColor: '#FEE500' }}>💬</div>
+                <div style={{ ...channelIcon, backgroundColor: '#FEE500' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3C6.48 3 2 6.58 2 10.94c0 2.8 1.86 5.27 4.66 6.67-.15.53-.96 3.4-.99 3.62 0 0-.02.17.09.24.11.06.24.01.24.01.32-.04 3.7-2.44 4.28-2.86.56.08 1.14.12 1.72.12 5.52 0 10-3.58 10-7.94S17.52 3 12 3z" fill="#3C1E1E"/>
+                  </svg>
+                </div>
                 <span style={channelName}>카카오톡</span>
               </button>
 
               {/* 인스타그램 */}
               <button onClick={handleInstagram} style={channelBtn}>
-                <div
-                  style={{
-                    ...channelIcon,
-                    background:
-                      'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
-                  }}
-                >
-                  📷
+                <div style={{ ...channelIcon, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <rect x="2" y="2" width="20" height="20" rx="6" stroke="#fff" strokeWidth="2"/>
+                    <circle cx="12" cy="12" r="5" stroke="#fff" strokeWidth="2"/>
+                    <circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/>
+                  </svg>
                 </div>
                 <span style={channelName}>인스타그램</span>
               </button>
 
               {/* X (트위터) */}
               <button onClick={handleTwitter} style={channelBtn}>
-                <div style={{ ...channelIcon, backgroundColor: '#000' }}>𝕏</div>
-                <span style={channelName}>X (트위터)</span>
+                <div style={{ ...channelIcon, backgroundColor: '#000' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#fff"/>
+                  </svg>
+                </div>
+                <span style={channelName}>X</span>
               </button>
 
               {/* 왓츠앱 */}
               <button onClick={handleWhatsApp} style={channelBtn}>
-                <div style={{ ...channelIcon, backgroundColor: '#25D366' }}>💚</div>
+                <div style={{ ...channelIcon, backgroundColor: '#25D366' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" fill="#fff"/>
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 01-4.108-1.128l-.292-.174-2.6.774.774-2.6-.174-.292A8 8 0 1112 20z" fill="#fff"/>
+                  </svg>
+                </div>
                 <span style={channelName}>WhatsApp</span>
               </button>
 
               {/* 텍스트 복사 */}
               <button onClick={handleCopyText} style={channelBtn}>
-                <div style={{ ...channelIcon, backgroundColor: '#e5e7eb' }}>📋</div>
+                <div style={{ ...channelIcon, backgroundColor: '#6B7280' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <rect x="8" y="8" width="12" height="12" rx="2" stroke="#fff" strokeWidth="2"/>
+                    <path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" stroke="#fff" strokeWidth="2"/>
+                  </svg>
+                </div>
                 <span style={channelName}>텍스트 복사</span>
               </button>
 
               {/* 기타 공유 */}
               <button onClick={handleWebShare} style={channelBtn}>
-                <div style={{ ...channelIcon, backgroundColor: '#ddd6fe' }}>📤</div>
+                <div style={{ ...channelIcon, backgroundColor: '#8B5CF6' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <circle cx="18" cy="5" r="3" stroke="#fff" strokeWidth="2"/>
+                    <circle cx="6" cy="12" r="3" stroke="#fff" strokeWidth="2"/>
+                    <circle cx="18" cy="19" r="3" stroke="#fff" strokeWidth="2"/>
+                    <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#fff" strokeWidth="2"/>
+                  </svg>
+                </div>
                 <span style={channelName}>더보기</span>
               </button>
             </div>
@@ -503,7 +526,8 @@ const cardBase: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  justifyContent: 'space-between',
+  justifyContent: 'center',
+  gap: '8px',
   color: '#fff',
   boxSizing: 'border-box',
   position: 'relative',
@@ -551,6 +575,7 @@ const sideBox: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: '4px',
   backdropFilter: 'blur(4px)',
 };
@@ -583,9 +608,14 @@ const traitList: React.CSSProperties = {
 const traitChip: React.CSSProperties = {
   fontSize: '8px',
   backgroundColor: 'rgba(255,255,255,0.2)',
-  padding: '2px 6px',
+  padding: '4px 8px',
   borderRadius: '8px',
   whiteSpace: 'nowrap',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1,
+  minHeight: '20px',
 };
 
 const vsCircle: React.CSSProperties = {
@@ -611,7 +641,7 @@ const scoreArea: React.CSSProperties = {
 
 const scoreRow: React.CSSProperties = {
   display: 'flex',
-  alignItems: 'baseline',
+  alignItems: 'center',
   gap: '10px',
 };
 
@@ -625,8 +655,12 @@ const scoreBadge: React.CSSProperties = {
   fontSize: '13px',
   fontWeight: 600,
   backgroundColor: 'rgba(255,255,255,0.2)',
-  padding: '4px 12px',
+  padding: '5px 12px',
   borderRadius: '16px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1.25,
 };
 
 const barBg: React.CSSProperties = {
@@ -650,6 +684,10 @@ const changeBox: React.CSSProperties = {
   padding: '10px 14px',
   width: '100%',
   boxSizing: 'border-box',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  flexShrink: 0,
 };
 
 const changeTitle: React.CSSProperties = {
@@ -666,21 +704,32 @@ const changeItem: React.CSSProperties = {
 
 const tagRow: React.CSSProperties = {
   display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   gap: '8px',
+  flexWrap: 'wrap',
 };
 
 const tagMatch: React.CSSProperties = {
   fontSize: '10px',
   backgroundColor: 'rgba(255,255,255,0.2)',
-  padding: '4px 10px',
+  padding: '5px 10px',
   borderRadius: '10px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1.25,
 };
 
 const tagGrey: React.CSSProperties = {
   fontSize: '10px',
   backgroundColor: 'rgba(255,255,255,0.15)',
-  padding: '4px 10px',
+  padding: '5px 10px',
   borderRadius: '10px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1.25,
 };
 
 const footerArea: React.CSSProperties = {
@@ -698,6 +747,10 @@ const metaphorArea: React.CSSProperties = {
   borderRadius: '20px',
   letterSpacing: '0.5px',
   backdropFilter: 'blur(4px)',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1.25,
 };
 
 const themeArea: React.CSSProperties = {
@@ -707,6 +760,10 @@ const themeArea: React.CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
   textAlign: 'center',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  flexShrink: 0,
 };
 
 const themeLabel: React.CSSProperties = {
