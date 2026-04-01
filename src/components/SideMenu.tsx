@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { hasScanResults } from '../utils/storage';
 // import { useI18n } from '../utils/i18n';
 
 interface SideMenuProps {
@@ -54,26 +53,9 @@ const menuItems: MenuItem[] = [
 export const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  // const { t } = useI18n();
-  const t = (key: string) => {
-    const menuMap: Record<string, string> = {
-      'menu.main': '홈',
-      'menu.intro': 'SCAN 소개',
-      'menu.tests': '성향 검사 하기',
-      'menu.results': '나의 분석 결과 보기',
-      'menu.share': '친구 초대하기',
-      'menu.language': '언어',
-      'menu.myResults': '지난 나의 결과 보기',
-    };
-    return menuMap[key] || key;
-  };
-  const [hasResults, setHasResults] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // 저장된 결과가 있는지 확인
-    hasScanResults().then(setHasResults);
-    
     // 현재 경로에 따라 하위 메뉴 자동 확장
     const currentPath = location.pathname;
     menuItems.forEach((item) => {

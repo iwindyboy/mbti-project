@@ -5,14 +5,12 @@ interface RankingQuestionItemProps {
   question: RankingQuestion;
   selectedRanks: Record<string, number>; // { itemId: rank (1~6) }
   onRankChange: (itemId: string, rank: number) => void;
-  questionIndex: number;
 }
 
 export const RankingQuestionItem: React.FC<RankingQuestionItemProps> = ({
   question,
   selectedRanks,
   onRankChange,
-  questionIndex,
 }) => {
   const [localRanks, setLocalRanks] = useState<Record<string, number>>(selectedRanks);
 

@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { DatingQuestion } from '../constants/datingQuestions';
+import { RankingQuestion } from '../constants/datingQuestions';
 
 interface DatingQuestionItemProps {
-  question: DatingQuestion;
+  question: RankingQuestion;
   selectedValue: number | null;
   onSelect: (value: number) => void;
-  questionIndex: number;
   shouldScroll: boolean;
 }
 
@@ -13,7 +12,6 @@ export const DatingQuestionItem: React.FC<DatingQuestionItemProps> = ({
   question,
   selectedValue,
   onSelect,
-  questionIndex,
   shouldScroll,
 }) => {
   const itemRef = useRef<HTMLDivElement>(null);
@@ -54,7 +52,7 @@ export const DatingQuestionItem: React.FC<DatingQuestionItemProps> = ({
     <div ref={itemRef} style={styles.container} className="dating-question-item-container">
       <div style={styles.questionHeader}>
         <span style={styles.questionNumber}>문항 {question.id}</span>
-        <span style={styles.questionText} className="question-text">{question.text}</span>
+        <span style={styles.questionText} className="question-text">{question.title}</span>
       </div>
 
       <div style={styles.scaleContainer}>

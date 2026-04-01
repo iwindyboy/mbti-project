@@ -316,7 +316,6 @@ export const DatingMyTypePage: React.FC = () => {
                     question={question}
                     selectedValue={scenarioAnswers[question.id] || null}
                     onSelect={(value) => handleScenarioAnswer(question.id, value, index)}
-                    questionIndex={index}
                   />
                 </div>
               ))}
@@ -358,7 +357,6 @@ export const DatingMyTypePage: React.FC = () => {
                     question={question}
                     selectedRanks={rankingAnswers[question.id] || {}}
                     onRankChange={(itemId, rank) => handleRankingAnswer(question.id, itemId, rank, index)}
-                    questionIndex={index}
                   />
                 </div>
               ))}

@@ -33,7 +33,7 @@ export const LandingPage: React.FC = () => {
 
         {/* SCAN ME 로고 */}
         <div style={styles.logoContainer} className="landing-logo-container">
-          <ScanLogo size={120} color="#C85A7A" />
+          <ScanLogo size={120} />
         </div>
       </div>
 

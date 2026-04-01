@@ -2,12 +2,10 @@ import React from 'react';
 
 interface ScanLogoProps {
   size?: number;
-  color?: string;
 }
 
 export const ScanLogo: React.FC<ScanLogoProps> = ({ 
-  size = 140, 
-  color = '#C85A7A' 
+  size = 140 
 }) => {
   return (
     <div style={styles.container}>

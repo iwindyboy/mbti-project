@@ -238,7 +238,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ result, onReset }) => {
     leftPercent: number,
     rightPercent: number,
     axisKey: string,
-    isGreyZone: boolean
+    _isGreyZone: boolean
   ) => {
     const colors = axisColors[axisKey] || axisColors['EI'];
     
@@ -399,7 +399,6 @@ export const ResultPage: React.FC<ResultPageProps> = ({ result, onReset }) => {
         <div style={styles.scoresSection}>
           <h2 style={styles.sectionTitle}>📊 성향 분석 결과</h2>
           {axes.map((axis) => {
-            const totalDiff = result.scores[axis.key];
             const leftSum = result.leftSums[axis.key] || 0;
             const rightSum = result.rightSums[axis.key] || 0;
             
@@ -408,7 +407,6 @@ export const ResultPage: React.FC<ResultPageProps> = ({ result, onReset }) => {
             
             // Grey Zone 여부 확인 (편차 절댓값 <= 3)
             const isGreyZone = result.isGrayZone[axis.key] || false;
-            const colors = axisColors[axis.key] || axisColors['EI'];
 
             // 막대 스타일 계산
             const barStyles = getAxisBarStyles(leftPercent, rightPercent, axis.key, isGreyZone);

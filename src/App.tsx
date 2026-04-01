@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { I18nProvider } from './utils/i18n';
 import { getOrCreateUserId } from './utils/uuid';
 import { LandingPage } from './pages/LandingPage';
 import { QuestionPage } from './pages/QuestionPage';

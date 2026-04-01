@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getIntegratedResult, getLatestScanResult } from '../utils/storage';
+import { getLatestScanResult } from '../utils/storage';
 
 export const IntegratedResultPage: React.FC = () => {
   const navigate = useNavigate();

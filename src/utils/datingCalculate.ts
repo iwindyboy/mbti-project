@@ -4,6 +4,7 @@ export interface DatingResult {
   coreType: string; // 확인형, 몰입형, 신중형, 균형형, 기준형, 자유공감형
   subType: string;
   scores: Record<string, number>;
+  normalizedScores: Record<string, { score: number; displayPct: number; barPct: number }>;
   confidence: number;
   radarData: number[];
   maxScore: number;

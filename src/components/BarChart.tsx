@@ -1,7 +1,6 @@
 import React from 'react';
 
 interface BarChartProps {
-  data: number[]; // 6개 유형의 barPct (0~100)
   labels: string[]; // 6개 유형 이름
   coreType: string; // 주요 유형
   subType: string; // 서브 유형
@@ -9,7 +8,6 @@ interface BarChartProps {
 }
 
 export const BarChart: React.FC<BarChartProps> = ({
-  data,
   labels,
   coreType,
   subType,

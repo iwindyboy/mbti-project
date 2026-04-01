@@ -57,33 +57,33 @@ function findDifferences(sajuCode: string, spectrumCode: string): string[] {
 
 // ═══════════ 천간 → 예상 코드 ═══════════
 const CHEONGAN_EXPECTED: Record<string, string> = {
-  甲: 'ENTJD',
-  乙: 'INFPA',
-  丙: 'ENFJD',
-  丁: 'INFJA',
-  戊: 'ESTJD',
-  己: 'ISFJA',
-  庚: 'ESTJD',
-  辛: 'ISTPA',
-  壬: 'ENTPD',
-  癸: 'INFPA',
+  '甲': 'ENTJD',
+  '乙': 'INFPA',
+  '丙': 'ENFJD',
+  '丁': 'INFJA',
+  '戊': 'ESTJD',
+  '己': 'ISFJA',
+  '庚': 'ESTJD',
+  '辛': 'ISTPA',
+  '壬': 'ENTPD',
+  '癸': 'INFPA',
 };
 
 // ═══════════ 오행 컬러 ═══════════
 const OHANG_GRADIENT: Record<string, string> = {
-  木: 'linear-gradient(135deg, #a8e6cf 0%, #3d8b6e 50%, #1a5c3a 100%)',
-  火: 'linear-gradient(135deg, #ffb3ba 0%, #e84393 50%, #b71540 100%)',
-  土: 'linear-gradient(135deg, #ffeaa7 0%, #dca36d 50%, #a0764a 100%)',
-  金: 'linear-gradient(135deg, #dfe6e9 0%, #b2bec3 50%, #636e72 100%)',
-  水: 'linear-gradient(135deg, #c3cfe2 0%, #7c6fb0 50%, #4a3580 100%)',
+  '木': 'linear-gradient(135deg, #a8e6cf 0%, #3d8b6e 50%, #1a5c3a 100%)',
+  '火': 'linear-gradient(135deg, #ffb3ba 0%, #e84393 50%, #b71540 100%)',
+  '土': 'linear-gradient(135deg, #ffeaa7 0%, #dca36d 50%, #a0764a 100%)',
+  '金': 'linear-gradient(135deg, #dfe6e9 0%, #b2bec3 50%, #636e72 100%)',
+  '水': 'linear-gradient(135deg, #c3cfe2 0%, #7c6fb0 50%, #4a3580 100%)',
 };
 
 const OHANG_ACCENT: Record<string, string> = {
-  木: '#2d6a4f',
-  火: '#c2185b',
-  土: '#8d6e4a',
-  金: '#4a5568',
-  水: '#5b3e96',
+  '木': '#2d6a4f',
+  '火': '#c2185b',
+  '土': '#8d6e4a',
+  '金': '#4a5568',
+  '水': '#5b3e96',
 };
 
 export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
@@ -97,8 +97,8 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
   alignmentLabel,
   alignmentEmoji,
   matchedAxes,
-  gapAxes,
-  greyZoneAxes,
+  gapAxes: _gapAxes,
+  greyZoneAxes: _greyZoneAxes,
   greyZoneCount,
   lifeTheme,
   onClose,
@@ -147,7 +147,6 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
       link.click();
       showMessage('이미지가 저장됐어요! 📸 인스타 스토리에 올려보세요');
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err);
       showMessage('저장에 실패했어요. 다시 시도해주세요 😢');
     } finally {
@@ -172,7 +171,6 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
   };
 
   const handleInstagram = async () => {
-    // 이미지 저장 후 인스타 안내
     await handleDownload();
     showMessage('이미지를 저장했어요! 📷 인스타그램 앱에서 스토리에 올려주세요');
   };
@@ -202,7 +200,6 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
         handleCopyText();
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.log('공유 취소:', err);
     }
   };
@@ -382,7 +379,7 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
                 <span style={channelName}>인스타그램</span>
               </button>
 
-              {/* X (트위터) */}
+              {/* X */}
               <button onClick={handleTwitter} style={channelBtn}>
                 <div style={{ ...channelIcon, backgroundColor: '#000' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -392,7 +389,7 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
                 <span style={channelName}>X</span>
               </button>
 
-              {/* 왓츠앱 */}
+              {/* WhatsApp */}
               <button onClick={handleWhatsApp} style={channelBtn}>
                 <div style={{ ...channelIcon, backgroundColor: '#25D366' }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -414,7 +411,7 @@ export const IntegratedShareCard: React.FC<IntegratedShareCardProps> = ({
                 <span style={channelName}>텍스트 복사</span>
               </button>
 
-              {/* 기타 공유 */}
+              {/* 더보기 */}
               <button onClick={handleWebShare} style={channelBtn}>
                 <div style={{ ...channelIcon, backgroundColor: '#8B5CF6' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -554,6 +551,21 @@ const brandSub: React.CSSProperties = {
   letterSpacing: '1.5px',
 };
 
+const metaphorArea: React.CSSProperties = {
+  fontSize: '13px',
+  fontWeight: 700,
+  opacity: 0.9,
+  backgroundColor: 'rgba(255,255,255,0.15)',
+  padding: '6px 16px',
+  borderRadius: '20px',
+  letterSpacing: '0.5px',
+  backdropFilter: 'blur(4px)',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1.25,
+};
+
 const nameArea: React.CSSProperties = {
   fontSize: '15px',
   fontWeight: 600,
@@ -562,7 +574,7 @@ const nameArea: React.CSSProperties = {
 
 const comparisonBox: React.CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'stretch',
   gap: '8px',
   width: '100%',
 };
@@ -611,11 +623,13 @@ const traitChip: React.CSSProperties = {
   padding: '4px 8px',
   borderRadius: '8px',
   whiteSpace: 'nowrap',
-  display: 'flex',
+  display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   lineHeight: 1,
   minHeight: '20px',
+  height: '20px',
+  boxSizing: 'border-box',
 };
 
 const vsCircle: React.CSSProperties = {
@@ -629,6 +643,7 @@ const vsCircle: React.CSSProperties = {
   fontSize: '10px',
   fontWeight: 800,
   flexShrink: 0,
+  alignSelf: 'center',
 };
 
 const scoreArea: React.CSSProperties = {
@@ -655,12 +670,11 @@ const scoreBadge: React.CSSProperties = {
   fontSize: '13px',
   fontWeight: 600,
   backgroundColor: 'rgba(255,255,255,0.2)',
-  padding: '5px 12px',
+  padding: '4px 12px',
   borderRadius: '16px',
-  display: 'inline-flex',
+  display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
-  lineHeight: 1.25,
+  lineHeight: 1,
 };
 
 const barBg: React.CSSProperties = {
@@ -678,6 +692,32 @@ const barFill: React.CSSProperties = {
   transition: 'width 0.5s ease',
 };
 
+const themeArea: React.CSSProperties = {
+  backgroundColor: 'rgba(255,255,255,0.12)',
+  borderRadius: '10px',
+  padding: '10px 14px',
+  width: '100%',
+  boxSizing: 'border-box',
+  textAlign: 'center',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+};
+
+const themeLabel: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  marginBottom: '4px',
+  opacity: 0.85,
+};
+
+const themeText: React.CSSProperties = {
+  fontSize: '11px',
+  lineHeight: 1.6,
+  opacity: 0.9,
+  wordBreak: 'keep-all',
+};
+
 const changeBox: React.CSSProperties = {
   backgroundColor: 'rgba(255,255,255,0.12)',
   borderRadius: '10px',
@@ -687,7 +727,6 @@ const changeBox: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  flexShrink: 0,
 };
 
 const changeTitle: React.CSSProperties = {
@@ -736,48 +775,6 @@ const footerArea: React.CSSProperties = {
   fontSize: '10px',
   opacity: 0.4,
   letterSpacing: '1.5px',
-};
-
-const metaphorArea: React.CSSProperties = {
-  fontSize: '13px',
-  fontWeight: 700,
-  opacity: 0.9,
-  backgroundColor: 'rgba(255,255,255,0.15)',
-  padding: '6px 16px',
-  borderRadius: '20px',
-  letterSpacing: '0.5px',
-  backdropFilter: 'blur(4px)',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  lineHeight: 1.25,
-};
-
-const themeArea: React.CSSProperties = {
-  backgroundColor: 'rgba(255,255,255,0.12)',
-  borderRadius: '10px',
-  padding: '10px 14px',
-  width: '100%',
-  boxSizing: 'border-box',
-  textAlign: 'center',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  flexShrink: 0,
-};
-
-const themeLabel: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 700,
-  marginBottom: '4px',
-  opacity: 0.85,
-};
-
-const themeText: React.CSSProperties = {
-  fontSize: '11px',
-  lineHeight: 1.6,
-  opacity: 0.9,
-  wordBreak: 'keep-all',
 };
 
 // ═══ 공통 스타일 ═══
@@ -865,4 +862,3 @@ const channelName: React.CSSProperties = {
   fontWeight: 600,
   color: '#4b5563',
 };
-

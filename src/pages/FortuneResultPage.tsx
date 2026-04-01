@@ -202,7 +202,7 @@ export const FortuneResultPage: React.FC = () => {
     );
   }
 
-  const { 일간, 오행 } = result;
+  const { 일간 } = result;
   const symbol = ILGAN_SYMBOL[일간];
   
   // content는 localStorage에서 가져온 것이거나, DB에서 가져온 것

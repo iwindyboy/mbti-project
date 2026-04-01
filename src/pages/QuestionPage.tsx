@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GroupPage } from '../components/GroupPage';
 import { questionGroups } from '../constants/questions';
 import { calculateScanResult, Answer as CalculateAnswer } from '../utils/calculate';
 import { saveScanResult } from '../utils/storage';
-import { createResultCard } from '../utils/resultCard';
 
 export const QuestionPage: React.FC = () => {
   const navigate = useNavigate();

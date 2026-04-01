@@ -22,7 +22,7 @@ export const IntroPage: React.FC = () => {
         {/* 메인 타이틀 */}
         <div style={styles.titleSection}>
           <div style={styles.logoContainer}>
-            <ScanLogo size={120} color="#C85A7A" />
+            <ScanLogo size={120} />
           </div>
           <h1 style={styles.mainTitle}>✨ SCAN</h1>
           <p style={styles.subtitle}>

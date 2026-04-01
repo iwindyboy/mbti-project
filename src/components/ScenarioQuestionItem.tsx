@@ -5,14 +5,12 @@ interface ScenarioQuestionItemProps {
   question: ScenarioQuestion;
   selectedValue: string | null;
   onSelect: (value: string) => void;
-  questionIndex: number;
 }
 
 export const ScenarioQuestionItem: React.FC<ScenarioQuestionItemProps> = ({
   question,
   selectedValue,
   onSelect,
-  questionIndex,
 }) => {
   return (
     <div style={styles.container}>
@@ -22,7 +20,7 @@ export const ScenarioQuestionItem: React.FC<ScenarioQuestionItemProps> = ({
       </div>
       
       <div style={styles.optionsContainer}>
-        {question.options.map((option, index) => {
+        {question.options.map((option) => {
           const isSelected = selectedValue === option.value;
           return (
             <label
