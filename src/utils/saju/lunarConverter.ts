@@ -59,7 +59,7 @@ export function solarToLunar(
       year: lunar.year,
       month: lunar.month,
       day: lunar.day,
-      isLeapMonth: lunar.isIntercalation
+      isLeapMonth: !!lunar.intercalation
     };
   } catch (error) {
     console.error('양력→음력 변환 오류:', error);

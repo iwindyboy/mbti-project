@@ -119,15 +119,6 @@ export const generateTieBreakQuestion = (
   firstType: string,
   secondType: string
 ): { question: string; options: { value: string; label: string; type: string }[] } => {
-  const typeNames: Record<string, string> = {
-    '확인형': '확인형',
-    '몰입형': '몰입형',
-    '신중형': '신중형',
-    '균형형': '균형형',
-    '기준형': '기준형',
-    '자유공감형': '자유공감형',
-  };
-
   return {
     question: `당신은 ${firstType}과 ${secondType} 성향 사이에 있네요. 둘 중 어느 쪽이 더 가깝나요?`,
     options: [

@@ -554,8 +554,6 @@ function buildOverallCoachingMessage(
   gapCount: number,
   greyCount: number
 ): string {
-  const total = matchCount + gapCount + greyCount;
-
   if (matchCount >= 4) {
     return `${persona.name}의 기운을 가진 당신은 타고난 기질을 놀라울 만큼 잘 살리고 있어요. ${persona.metaphor}처럼 ${persona.coreDrive} — 이 본능이 지금 삶에서 그대로 발현되고 있어요. 당신의 다음 과제는 이 강점을 "더 깊이" 파는 것이에요. 이미 방향은 맞으니, 속도를 조절하며 한 걸음 한 걸음 전문성을 쌓아가세요. ${persona.growthKey}`;
   }

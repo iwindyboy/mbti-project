@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ResultPage } from '../components/ResultPage';
 import { CalculateResult } from '../utils/calculate';
@@ -10,8 +10,9 @@ import { createResultCard } from '../utils/resultCard';
 export const ResultPageWrapper: React.FC = () => {
   const navigate = useNavigate();
   const [result, setResult] = useState<CalculateResult | null>(null);
-  const [adShown, setAdShown] = useState(false);
+  const [adCompleted, setAdCompleted] = useState(false);
   const [isWebView, setIsWebView] = useState(false);
+  const pendingResultRef = useRef<CalculateResult | null>(null);
 
   useEffect(() => {
     // WebView 환경 확인
@@ -33,13 +34,12 @@ export const ResultPageWrapper: React.FC = () => {
       const removeListener = adMobBridge.addEventListener((status, data) => {
         console.log('[AdMob] 상태 변경:', status, data);
         
-        if (status === AdMobStatus.REWARDED) {
-          setAdShown(true);
-          // 광고 시청 완료 후 결과 표시 요청
-          requestShowResult();
-        } else if (status === AdMobStatus.FAILED) {
-          // 광고 실패 시에도 결과 표시
-          setAdShown(true);
+        if (status === AdMobStatus.REWARDED || status === AdMobStatus.FAILED || status === AdMobStatus.CLOSED) {
+          // 광고 처리 완료 후에만 결과를 표시
+          if (pendingResultRef.current) {
+            setResult(pendingResultRef.current);
+          }
+          setAdCompleted(true);
           requestShowResult();
         }
       });
@@ -54,7 +54,7 @@ export const ResultPageWrapper: React.FC = () => {
             
             if (message.type === 'RESULT_DATA') {
               const resultData = message.data as CalculateResult;
-              setResult(resultData);
+              pendingResultRef.current = resultData;
               
               // 결과 저장 (UUID 포함, 기본 검사 타입)
               const resultCard = createResultCard(resultData);
@@ -66,9 +66,16 @@ export const ResultPageWrapper: React.FC = () => {
               adMobBridge.loadRewardedAd().then(() => {
                 adMobBridge.showRewardedAd().catch(err => {
                   console.error('[AdMob] 광고 표시 실패:', err);
-                  // 실패해도 결과 표시
+                  // 실패해도 결과는 표시
+                  setResult(resultData);
+                  setAdCompleted(true);
                   requestShowResult();
                 });
+              }).catch(err => {
+                console.error('[AdMob] 광고 로드 실패:', err);
+                setResult(resultData);
+                setAdCompleted(true);
+                requestShowResult();
               });
             }
           }
@@ -126,6 +133,17 @@ export const ResultPageWrapper: React.FC = () => {
       navigate('/');
     }
   };
+
+  if (isWebView && !adCompleted) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2>광고를 준비하는 중...</h2>
+        <p style={{ marginTop: '20px', color: '#666' }}>
+          광고 시청 후 결과가 표시됩니다.
+        </p>
+      </div>
+    );
+  }
 
   if (!result) {
     return (

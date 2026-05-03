@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { calculateSaju, SajuInput, SajuResult } from '../utils/sajuEngine';
 import { SAJU_CONTENT_DB, ILGAN_SYMBOL, FortuneType } from '../data/sajuDb';
 import { getLatestScanResult } from '../utils/storage';
+import { showInterstitial } from '../utils/adMobService';
 
 // 일간별 32 스펙트럼 매핑 데이터
 const ILGAN_SPECTRUM_MAP: Record<string, { types: string[]; reason: string }> = {
@@ -138,6 +139,7 @@ export const FortuneResultPage: React.FC = () => {
   const [result, setResult] = useState<SajuResult | null>(null);
   const [activeTab, setActiveTab] = useState<FortuneType | '선천적 성향'>('선천적 성향');
   const [contentOpacity, setContentOpacity] = useState(1);
+  const [adCompleted, setAdCompleted] = useState(false);
 
   useEffect(() => {
     // location.state에서 input을 가져오거나, localStorage에서 결과를 가져오기
@@ -193,6 +195,32 @@ export const FortuneResultPage: React.FC = () => {
       }
     }
   }, [location, navigate]);
+
+  // 사주 결과 페이지 진입 시 전면 광고 노출 후 결과 표시
+  useEffect(() => {
+    const showAd = async () => {
+      await showInterstitial();
+      setAdCompleted(true);
+    };
+    void showAd();
+  }, []);
+
+  if (!adCompleted) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          fontSize: '16px',
+          color: '#6b7280',
+        }}
+      >
+        결과를 준비하고 있어요...
+      </div>
+    );
+  }
 
   if (!result) {
     return (

@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { getLatestScanResult } from '../utils/storage';
 import { ResultPage } from '../components/ResultPage';
 import { CalculateResult } from '../utils/calculate';
+import { showInterstitial } from '../utils/adMobService';
 
 export const ScanResultPage: React.FC = () => {
   const navigate = useNavigate();
   const [result, setResult] = useState<CalculateResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adCompleted, setAdCompleted] = useState(false);
 
   useEffect(() => {
     loadResult();
@@ -50,6 +52,32 @@ export const ScanResultPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // 32 Spectrum 결과 페이지 진입 시 전면 광고 노출 후 결과 표시
+  useEffect(() => {
+    const showAd = async () => {
+      await showInterstitial();
+      setAdCompleted(true);
+    };
+    void showAd();
+  }, []);
+
+  if (!adCompleted) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          fontSize: '16px',
+          color: '#6b7280',
+        }}
+      >
+        결과를 준비하고 있어요...
+      </div>
+    );
+  }
 
   const handleReset = () => {
     navigate('/spectrum-intro');

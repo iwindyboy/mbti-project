@@ -12,7 +12,7 @@
 
 import { SajuResult } from './sajuEngine';
 import { CalculateResult } from './calculate';
-import { SajuFortune, ILGAN_SYMBOL, Cheongan } from '../data/sajuDb';
+import { SajuFortune } from '../data/sajuDb';
 import { SCAN_TYPE_DETAILS } from '../data/scanResultData';
 import { calculateAlignment, getCheonganProfile, analyzeGreyZones } from './saju/alignmentMapper';
 import { generateAxisCoaching, getCoachingPersona } from './saju/coachingContent';
@@ -149,38 +149,6 @@ export interface CoachingRecommendations {
 //  오행 ↔ 32 Spectrum 매핑
 // ══════════════════════════════════════════════════════════════
 
-const OHANG_TO_SCAN_TRAITS: Record<string, {
-  typeCodes: string[];
-  traits: string[];
-  axes: string[];
-}> = {
-  '木': {
-    typeCodes: ['ISFJ', 'ISFP', 'ESFJ', 'ESFP'],
-    traits: ['원칙', '성장', '강직함', '신뢰'],
-    axes: ['PJ', 'DA']
-  },
-  '火': {
-    typeCodes: ['ENFP', 'ENTP', 'ESFP', 'ESTP'],
-    traits: ['열정', '에너지', '표현', '영향력'],
-    axes: ['EI', 'PJ']
-  },
-  '土': {
-    typeCodes: ['ISFJ', 'ISTJ', 'ESFJ', 'ESTJ'],
-    traits: ['포용', '안정', '신뢰', '지속성'],
-    axes: ['SN', 'PJ']
-  },
-  '金': {
-    typeCodes: ['INTJ', 'ISTJ', 'ENTJ', 'ESTJ'],
-    traits: ['카리스마', '원칙', '단호함', '강인함'],
-    axes: ['FT', 'PJ']
-  },
-  '水': {
-    typeCodes: ['INFP', 'INFJ', 'ENFP', 'ENFJ'],
-    traits: ['자유', '지혜', '감성', '직관'],
-    axes: ['SN', 'FT']
-  }
-};
-
 // ══════════════════════════════════════════════════════════════
 //  통합 리포트 생성 함수
 // ══════════════════════════════════════════════════════════════
@@ -305,54 +273,6 @@ function analyzeAlignment(
     alignmentScore: alignResult.totalScore,
     summary
   };
-}
-
-function analyzeAxisAlignment(
-  sajuResult: SajuResult,
-  scanResult: CalculateResult
-): { score: number; traits: AlignmentAnalysis['matchingTraits'] } {
-  // 새 매핑 엔진이 이미 축별 분석을 하므로, 여기서는 결과만 변환
-  const alignResult = calculateAlignment(sajuResult.일간, scanResult.scores);
-  const traits: AlignmentAnalysis['matchingTraits'] = [];
-  let matchCount = 0;
-
-  for (const detail of alignResult.axisDetails) {
-    if (detail.isMatch) {
-      matchCount++;
-      traits.push({
-        category: `${detail.axisLabel} 축`,
-        sajuTrait: detail.sajuLabel,
-        scanTrait: detail.spectrumLabel,
-        description: `${detail.axisLabel}에서 선천적 기질과 현재 성향이 일치합니다.`
-      });
-    }
-  }
-
-  return {
-    score: Math.round((matchCount / 5) * 30),  // 최대 30점 기여
-    traits
-  };
-}
-
-function getExpectedAxisDirection(
-  ohang: string,
-  axis: string
-): 'left' | 'right' | 'neutral' {
-  // 새 매핑 엔진의 프로파일 활용
-  const ohangToCheongan: Record<string, string> = {
-    '木': '甲', '火': '丙', '土': '戊', '金': '庚', '水': '壬'
-  };
-  const cheongan = ohangToCheongan[ohang];
-  if (!cheongan) return 'neutral';
-
-  const profile = getCheonganProfile(cheongan);
-  if (!profile) return 'neutral';
-
-  const axisKey = axis as 'EI' | 'SN' | 'FT' | 'PJ' | 'DA';
-  const direction = profile.expectedDirections[axisKey];
-  if (!direction) return 'neutral';
-
-  return direction === 'LEFT' ? 'left' : 'right';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -480,45 +400,6 @@ function analyzeGap(
   }
 
   return { differences, summary, growthPoints };
-}
-
-function analyzeAxisGaps(
-  sajuResult: SajuResult,
-  scanResult: CalculateResult
-): GapAnalysis['differences'] {
-  const gaps: GapAnalysis['differences'] = [];
-  const ohang = sajuResult.오행;
-  const ohangTraits = OHANG_TO_SCAN_TRAITS[ohang];
-  
-  if (!ohangTraits) {
-    return [];
-  }
-  
-  ohangTraits.axes.forEach(axis => {
-    const scanScore = scanResult.scores[axis] || 0;
-    const expectedDirection = getExpectedAxisDirection(ohang, axis);
-    const actualDirection = scanScore <= 0 ? 'left' : 'right';
-    
-    if (expectedDirection !== 'neutral' && expectedDirection !== actualDirection) {
-      const axisNames: Record<string, { left: string; right: string }> = {
-        'EI': { left: '내향성', right: '외향성' },
-        'SN': { left: '감각형', right: '직관형' },
-        'FT': { left: '감정형', right: '사고형' },
-        'PJ': { left: '인식형', right: '판단형' },
-        'DA': { left: '신중형', right: '적응형' }
-      };
-      
-      gaps.push({
-        category: `${axis} 축`,
-        sajuSide: expectedDirection === 'left' ? axisNames[axis].left : axisNames[axis].right,
-        scanSide: actualDirection === 'left' ? axisNames[axis].left : axisNames[axis].right,
-        gapDescription: `${axis} 축에서 선천적 기질과 현재 성향이 다릅니다.`,
-        growthOpportunity: `양쪽 성향의 장점을 모두 활용할 수 있는 균형을 찾아보세요.`
-      });
-    }
-  });
-  
-  return gaps;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -690,7 +571,7 @@ function generateCoaching(
   sajuResult: SajuResult,
   sajuContent: SajuFortune,
   scanResult: CalculateResult,
-  gap: GapAnalysis
+  _gap: GapAnalysis
 ): CoachingRecommendations {
   const sajuOverview = sajuContent.전체개관;
   const persona = getCoachingPersona(sajuResult.일간);
@@ -698,6 +579,7 @@ function generateCoaching(
   // v2: ilgan 전달하여 천간 맞춤 코칭 생성
   const alignResult = calculateAlignment(sajuResult.일간, scanResult.scores);
   const axisCoaching = generateAxisCoaching(alignResult.axisDetails, sajuResult.일간);
+  const concretePlan = buildConcreteActionPlan(sajuResult, scanResult, alignResult);
 
   // v2: 종합 코칭 메시지
   const overallMessage = axisCoaching.overallMessage
@@ -712,6 +594,7 @@ function generateCoaching(
       ? `${persona.name}에게 성장이란 "${persona.coreDrive}"의 깊이를 더하는 것이에요. 타고난 힘은 유지하면서, 후천적 경험이 만든 새로운 역량을 통합해 나가세요.`
       : alignResult.summary,
     actions: [
+      ...concretePlan.growth,
       ...axisCoaching.growth,
       sajuOverview?.lifeTheme || '나만의 인생 테마를 발견하세요'
     ]
@@ -724,6 +607,7 @@ function generateCoaching(
       ? `당신은 ${persona.relStyle}이에요. 이 자연스러운 소통 스타일을 살리면서, 상대방의 다른 스타일도 이해하면 관계의 깊이가 한 단계 올라가요.`
       : '사주와 32 Spectrum을 통합한 관계 가이드',
     tips: [
+      ...concretePlan.relationship,
       sajuContent.애정운?.tips?.[0] || '관계에서 나만의 강점을 활용하세요',
       ...axisCoaching.relationship
     ]
@@ -736,6 +620,7 @@ function generateCoaching(
       ? `${persona.careerDNA} — 이것이 당신의 직업적 DNA예요. 타고난 커리어 감각 위에 후천적으로 키운 역량을 얹으면, 시장에서 독보적인 포지션을 만들 수 있어요.`
       : '통합 분석 기반 커리어 추천',
     recommendations: [
+      ...concretePlan.career,
       sajuContent.직업운?.tips?.[0] || '나의 강점을 살리는 일을 찾으세요',
       ...axisCoaching.career
     ]
@@ -748,6 +633,7 @@ function generateCoaching(
       ? `${persona.growthKey} — 이것이 당신의 자기계발 핵심 키워드예요. 선천적 강점을 일상에서 더 자주 활용하면서, 부족한 부분을 작은 실험으로 채워나가세요.`
       : '통합 성장 가이드',
     practices: [
+      ...concretePlan.selfDev,
       persona
         ? `"${persona.coreDrive}" — 이 본능을 매일 한 가지 행동으로 실천하기`
         : (sajuOverview?.strength || '선천적 강점') + '을 일상에서 활용하기',
@@ -762,37 +648,56 @@ function generateCoaching(
 //  유틸리티 함수
 // ══════════════════════════════════════════════════════════════
 
+function buildConcreteActionPlan(
+  sajuResult: SajuResult,
+  scanResult: CalculateResult,
+  alignResult: ReturnType<typeof calculateAlignment>
+): {
+  growth: string[];
+  relationship: string[];
+  career: string[];
+  selfDev: string[];
+} {
+  const profile = getCheonganProfile(sajuResult.일간);
+  const topAxis = alignResult.axisDetails
+    .filter(detail => !detail.isGreyZone)
+    .sort((a, b) => a.axisScore - b.axisScore)[0];
+
+  const axisLabel = topAxis?.axisLabel || '핵심 축';
+  const score = alignResult.totalScore;
+  const typeCode = scanResult.typeCode;
+  const keyword = profile?.keywords?.[0] || '핵심 강점';
+
+  return {
+    growth: [
+      `이번 주 7일 동안 하루 10분, "${keyword}"을 발휘한 순간을 기록하고 주말에 1회 복기하세요.`,
+      `${axisLabel} 영역에서 의사결정을 할 때 "선천 기준 1개 + 현재 목표 1개"를 함께 적고 실행해보세요.`,
+      score >= 70
+        ? `강점 유지 단계: 잘 되는 루틴 1가지를 고정하고, 난이도를 10%만 높여 확장하세요.`
+        : `균형 회복 단계: 무리한 변화 대신 하루 1개 행동만 유지해 정체성을 안정화하세요.`
+    ],
+    relationship: [
+      `가까운 사람 1명에게 이번 주 내로 "내 에너지가 올라가는 대화 방식"을 구체적으로 공유하세요.`,
+      `갈등 대화에서는 24시간 안에 "감정 확인 1문장 + 요청 1문장" 형식으로 정리해 전달해보세요.`,
+      `${typeCode} 성향의 강점을 관계에 쓰기 위해, 먼저 공감하고(1분) 그다음 해결책을 제안하는 순서를 지켜보세요.`
+    ],
+    career: [
+      `업무 시작 전 3분: 오늘 목표를 "성과 1개 + 관계/협업 1개"로 나눠 적고 종료 전에 체크하세요.`,
+      `${axisLabel} 관련 업무를 주 2회 우선 배치해 강점 사용 빈도를 의도적으로 높이세요.`,
+      `이번 달에 "반복되는 병목 1개"를 선택해 템플릿/체크리스트로 표준화해보세요.`
+    ],
+    selfDev: [
+      `매일 취침 전 5분, 오늘의 선택 1개를 "잘한 점 / 개선점 / 내일 한 가지"로 짧게 기록하세요.`,
+      `주 1회 30분은 디지털 차단 시간으로 확보하고, 선천 강점 회복용 루틴(독서/산책/정리)을 고정하세요.`,
+      `2주 단위로 작은 실험 1개를 정해 실행하고, 유지/중단/개선 중 하나로 반드시 결론 내리세요.`
+    ]
+  };
+}
+
 function getScanTypeName(typeCode: string): string {
   // SCAN_TYPE_DETAILS에서 타입 이름 가져오기
   const typeDetail = SCAN_TYPE_DETAILS[typeCode];
-  return typeDetail?.name || typeCode;
+  return typeDetail?.title || typeCode;
 }
 
-function checkTextMatch(text1: string, text2: string): boolean {
-  // 간단한 텍스트 매칭 (키워드 기반)
-  const keywords1 = extractKeywords(text1);
-  const keywords2 = extractKeywords(text2);
-  
-  const common = keywords1.filter(kw => keywords2.includes(kw));
-  return common.length >= 2;
-}
 
-function extractKeywords(text: string): string[] {
-  // 간단한 키워드 추출
-  const commonWords = ['강점', '능력', '특성', '특징', '장점', '재능'];
-  return text.split(/[,\s]+/).filter(word => 
-    word.length > 1 && !commonWords.includes(word)
-  );
-}
-
-function analyzeTextGap(text1: string, text2: string): { description: string; opportunity: string } | null {
-  if (!text1 || !text2) return null;
-  
-  const match = checkTextMatch(text1, text2);
-  if (match) return null;
-  
-  return {
-    description: '선천적 주의점과 현재의 약점이 다릅니다.',
-    opportunity: '양쪽 모두 고려하여 균형잡힌 성장을 추구하세요.'
-  };
-}

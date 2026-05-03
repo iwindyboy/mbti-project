@@ -199,6 +199,10 @@ const ResultPage: React.FC = () => {
     );
   }
 
+  if (!data) {
+    return <div>데이터를 불러오는 중...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex flex-col">
       {/* 상단 헤더 */}

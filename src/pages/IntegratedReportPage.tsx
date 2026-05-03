@@ -7,6 +7,7 @@ import { ILGAN_SYMBOL, getSajuContent } from '../data/sajuDb';
 import { getLatestScanResult } from '../utils/storage';
 import { IntegratedShareCard } from '../components/IntegratedShareCard';
 import { calculateAlignment } from '../utils/saju/alignmentMapper';
+import { showRewarded } from '../utils/adMobService';
 
 export const IntegratedReportPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export const IntegratedReportPage: React.FC = () => {
   const [report, setReport] = useState<IntegratedReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [reportUnlocked, setReportUnlocked] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
@@ -143,11 +145,66 @@ export const IntegratedReportPage: React.FC = () => {
   const { saju, scan, analysis } = report;
   const sajuSymbol = ILGAN_SYMBOL[saju.result.일간];
 
+  const handleUnlockReport = async () => {
+    const rewarded = await showRewarded();
+    if (rewarded) {
+      setReportUnlocked(true);
+    } else {
+      alert('광고를 끝까지 시청해야 결과를 확인할 수 있어요.');
+    }
+  };
+
   return (
     <div ref={containerRef} style={styles.container}>
       {/* 스크롤 진행률 바 */}
       <div ref={progressBarRef} style={styles.progressBar} />
 
+      {/* 잠금 화면 */}
+      {!reportUnlocked && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '60vh',
+            gap: '20px',
+            padding: '40px 20px',
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: '48px' }}>🔒</div>
+          <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#1f2937' }}>
+            통합 분석 리포트
+          </h2>
+          <p style={{ fontSize: '15px', color: '#6b7280', lineHeight: 1.6 }}>
+            선천(사주) × 후천(32 Spectrum) 통합 분석 결과를
+            <br />
+            확인하려면 짧은 광고를 시청해주세요.
+          </p>
+          <button
+            onClick={handleUnlockReport}
+            style={{
+              padding: '16px 40px',
+              borderRadius: '16px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: '#fff',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(102,126,234,0.4)',
+            }}
+          >
+            🎬 광고 보고 결과 확인하기
+          </button>
+          <span style={{ fontSize: '12px', color: '#9ca3af' }}>약 15~30초 소요</span>
+        </div>
+      )}
+
+      {/* 리포트 내용 (잠금 해제 후에만 표시) */}
+      {reportUnlocked && (
+        <>
       {/* 헤더 */}
       <section style={styles.header}>
         <div style={styles.headerContent}>
@@ -502,6 +559,8 @@ export const IntegratedReportPage: React.FC = () => {
           lifeTheme={report.analysis.insights.lifeTheme}
           onClose={() => setShowShareCard(false)}
         />
+      )}
+        </>
       )}
     </div>
   );
